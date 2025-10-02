@@ -1,98 +1,103 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bibliothèque Alkawthar</title>
+    <title data-lang-key="title">مكتبة الكوثر</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Ajout d'une librairie d'icônes (Font Awesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Librairie pour lire les fichiers Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
-    <header>
-        <div class="logo">
-            <i class="fas fa-book-open"></i>
-            <h1>Bibliothèque Alkawthar</h1>
+    <!-- =======================
+         PAGE DE CONNEXION
+    ======================== -->
+    <div id="login-page">
+        <div class="language-switcher">
+            <button class="lang-btn" data-lang="ar">العربية</button>
+            <button class="lang-btn" data-lang="fr">Français</button>
+            <button class="lang-btn" data-lang="en">English</button>
         </div>
-        <nav>
-            <p>Écoles Internationales</p>
-        </nav>
-    </header>
+        <div class="login-container">
+            <!-- IMPORTANT: Remplacez 'logo.png' par le chemin de votre vrai logo -->
+            <img src="logo.png" alt="Logo Alkawthar" class="logo">
+            <h1 data-lang-key="welcome_title">مرحباً بكم في مكتبة مدارس الكوثر العالمية</h1>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username" data-lang-key="username_label">اسم المستخدم</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" data-lang-key="password_label">كلمة المرور</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn" data-lang-key="login_btn">تسجيل الدخول</button>
+                <p id="login-error" class="error-message"></p>
+            </form>
+        </div>
+    </div>
 
-    <main class="container">
-
-        <!-- Section pour la gestion via le lecteur de code-barres -->
-        <section class="card barcode-section">
-            <h2><i class="fas fa-barcode"></i> Gestion Rapide par Code-Barres</h2>
-            <div class="form-group">
-                <label for="isbn-scanner">Scanner l'ISBN du livre ici :</label>
-                <input type="text" id="isbn-scanner" placeholder="En attente du scan...">
+    <!-- =======================
+         TABLEAU DE BORD (caché par défaut)
+    ======================== -->
+    <div id="dashboard-page" style="display:none;">
+        <header>
+            <div class="logo-header">
+                <i class="fas fa-book-open"></i>
+                <h1 data-lang-key="dashboard_title">مكتبة الكوثر</h1>
             </div>
-            <div id="book-details" class="book-details-view">
-                <!-- Les détails du livre scanné s'afficheront ici -->
-                <p class="placeholder">Veuillez scanner un livre pour voir ses informations.</p>
-            </div>
-        </section>
+            <nav>
+                <p data-lang-key="school_name">المدارس العالمية</p>
+            </nav>
+        </header>
 
-        <div class="columns">
-            <!-- Section pour l'enregistrement d'un nouveau livre -->
+        <main class="container">
+
+            <section class="card barcode-section">
+                <h2 data-lang-key="scanner_title"><i class="fas fa-barcode"></i> إدارة سريعة عبر الباركود</h2>
+                <div class="form-group">
+                    <label for="isbn-scanner" data-lang-key="scanner_label">امسح ISBN الكتاب هنا:</label>
+                    <input type="text" id="isbn-scanner" placeholder-lang-key="scanner_placeholder">
+                </div>
+                <div id="book-details" class="book-details-view">
+                    <p class="placeholder" data-lang-key="scanner_instruction">الرجاء مسح كتاب ضوئياً لعرض معلوماته.</p>
+                </div>
+            </section>
+            
             <section class="card">
-                <h2><i class="fas fa-plus-circle"></i> Enregistrer un Nouveau Livre</h2>
-                <form id="add-book-form">
-                    <div class="form-group">
-                        <label for="isbn">ISBN</label>
-                        <input type="text" id="isbn" required placeholder="978-2-07-064302-9">
-                    </div>
-                    <div class="form-group">
-                        <label for="title">Titre du livre</label>
-                        <input type="text" id="title" required placeholder="Le Petit Prince">
-                    </div>
-                    <div class="form-group">
-                        <label for="section">Section</label>
-                        <select id="section" required>
-                            <option value="français">Français</option>
-                            <option value="anglais">Anglais</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="corner-name">Nom du Coin</label>
-                        <input type="text" id="corner-name" required placeholder="Aventures">
-                    </div>
-                    <div class="form-group">
-                        <label for="corner-number">Numéro du Coin</label>
-                        <input type="number" id="corner-number" required placeholder="12">
-                    </div>
-                    <button type="submit" class="btn">Enregistrer le Livre</button>
-                </form>
+                <h2 data-lang-key="excel_upload_title"><i class="fas fa-file-excel"></i> إضافة كتب عبر ملف Excel</h2>
+                <p data-lang-key="excel_instruction">اختر ملف (.xlsx, .csv) بالأعمدة: ISBN, Title, Section, CornerName, CornerNumber</p>
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv">
+                <button id="upload-excel-btn" class="btn btn-secondary" data-lang-key="upload_btn">رفع الملف</button>
+                <div id="upload-status"></div>
             </section>
 
-            <!-- Section pour la gestion des prêts -->
-            <section class="card">
-                <h2><i class="fas fa-hand-holding-heart"></i> Gérer une Allocation</h2>
-                <form id="loan-form">
-                    <div class="form-group">
-                        <label for="loan-isbn">ISBN du livre (scanné)</label>
-                        <input type="text" id="loan-isbn" required readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="student-name">Nom de l'élève</label>
-                        <input type="text" id="student-name" required placeholder="Nom complet de l'élève">
-                    </div>
-                    <div class="form-group">
-                        <label for="coordinator-name">Coordinatrice Responsable</label>
-                        <input type="text" id="coordinator-name" required>
-                    </div>
-                    <button type="submit" class="btn">Allouer le Livre</button>
-                    <button type="button" id="return-btn" class="btn btn-secondary">Remettre le Livre</button>
-                </form>
-            </section>
-        </div>
-    </main>
+            <div class="columns">
+                <section class="card">
+                    <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد</h2>
+                    <form id="add-book-form">
+                        <!-- Les champs du formulaire (ISBN, Titre, etc.) -->
+                        <button type="submit" class="btn" data-lang-key="save_book_btn">حفظ الكتاب</button>
+                    </form>
+                </section>
 
-    <footer>
-        <p>&copy; 2025 Écoles Internationales Alkawthar - Tous droits réservés.</p>
-    </footer>
+                <section class="card">
+                    <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة</h2>
+                    <form id="loan-form">
+                        <!-- Les champs du formulaire (ISBN, Élève, etc.) -->
+                        <button type="submit" class="btn" data-lang-key="loan_book_btn">إعارة الكتاب</button>
+                        <button type="button" id="return-btn" class="btn btn-secondary" data-lang-key="return_book_btn">إرجاع الكتاب</button>
+                    </form>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p data-lang-key="footer_text">&copy; 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة.</p>
+        </footer>
+    </div>
 
     <script src="index.js"></script>
 </body>
