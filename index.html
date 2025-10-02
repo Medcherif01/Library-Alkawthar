@@ -6,13 +6,12 @@
     <title data-lang-key="title">مكتبة الكوثر</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Librairie pour lire les fichiers Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
     <!-- =======================
-         PAGE DE CONNEXION
+         PAGE DE CONNEXION ANIMÉE
     ======================== -->
     <div id="login-page">
         <div class="language-switcher">
@@ -21,17 +20,17 @@
             <button class="lang-btn" data-lang="en">English</button>
         </div>
         <div class="login-container">
-            <!-- IMPORTANT: Le logo a été mis à jour -->
             <img src="https://lh3.googleusercontent.com/d/1lQ3Babrs3Wgv4rakVmkK0oCWcM0cTKPK" alt="Logo Alkawthar" class="logo">
             <h1 data-lang-key="welcome_title">مرحباً بكم في مكتبة مدارس الكوثر العالمية</h1>
+            <p class="welcome-subtitle" data-lang-key="welcome_subtitle">الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.</p>
             <form id="login-form">
-                <div class="form-group">
-                    <label for="username" data-lang-key="username_label">اسم المستخدم</label>
-                    <input type="text" id="username" required>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" required placeholder="اسم المستخدم" data-lang-key-placeholder="username_label">
                 </div>
-                <div class="form-group">
-                    <label for="password" data-lang-key="password_label">كلمة المرور</label>
-                    <input type="password" id="password" required>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" required placeholder="كلمة المرور" data-lang-key-placeholder="password_label">
                 </div>
                 <button type="submit" class="btn" data-lang-key="login_btn">تسجيل الدخول</button>
                 <p id="login-error" class="error-message"></p>
@@ -40,25 +39,26 @@
     </div>
 
     <!-- =======================
-         TABLEAU DE BORD (caché par défaut)
+         TABLEAU DE BORD MODERNE
     ======================== -->
     <div id="dashboard-page" style="display:none;">
         <header>
             <div class="logo-header">
                 <i class="fas fa-book-open"></i>
-                <h1 data-lang-key="dashboard_title">مكتبة الكوثر</h1>
+                <h1 data-lang-key="dashboard_title">لوحة تحكم مكتبة الكوثر</h1>
             </div>
-            <nav>
-                <p data-lang-key="school_name">المدارس العالمية</p>
-            </nav>
+            <div class="header-user">
+                <span data-lang-key="school_name">مدارس الكوثر العالمية</span>
+                <i class="fas fa-school"></i>
+            </div>
         </header>
 
         <main class="container">
 
-            <section class="card barcode-section">
+            <section class="card barcode-section animated">
                 <h2 data-lang-key="scanner_title"><i class="fas fa-barcode"></i> إدارة سريعة عبر الباركود</h2>
                 <div class="form-group">
-                    <label for="isbn-scanner" data-lang-key="scanner_label">امسح ISBN الكتاب هنا:</label>
+                    <label for="isbn-scanner" data-lang-key="scanner_label">امسح ISBN الكتاب هنا أو أدخله يدويًا:</label>
                     <input type="text" id="isbn-scanner" placeholder-lang-key="scanner_placeholder">
                 </div>
                 <div id="book-details" class="book-details-view">
@@ -66,27 +66,44 @@
                 </div>
             </section>
             
-            <section class="card">
+            <section class="card animated">
                 <h2 data-lang-key="excel_upload_title"><i class="fas fa-file-excel"></i> إضافة كتب عبر ملف Excel</h2>
                 <p data-lang-key="excel_instruction">اختر ملف (.xlsx, .csv) بالأعمدة: ISBN, Title, Section, CornerName, CornerNumber</p>
-                <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv">
-                <button id="upload-excel-btn" class="btn btn-secondary" data-lang-key="upload_btn">رفع الملف</button>
+                <input type="file" id="excel-file-input" class="file-input" accept=".xlsx, .xls, .csv">
+                <label for="excel-file-input" class="btn btn-secondary file-label" data-lang-key="choose_file_btn"><i class="fas fa-upload"></i> اختر ملف...</label>
+                <button id="upload-excel-btn" class="btn" data-lang-key="upload_btn">رفع ومعالجة الملف</button>
                 <div id="upload-status"></div>
             </section>
 
             <div class="columns">
-                <section class="card">
+                <section class="card animated">
                     <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد</h2>
                     <form id="add-book-form">
-                        <!-- Les champs du formulaire (ISBN, Titre, etc.) -->
+                         <!-- Les champs du formulaire (ISBN, Titre, etc.) -->
+                        <div class="form-group">
+                            <label for="new-isbn">ISBN</label>
+                            <input type="text" id="new-isbn" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-title" data-lang-key="book_title_label">عنوان الكتاب</label>
+                            <input type="text" id="new-title" required>
+                        </div>
                         <button type="submit" class="btn" data-lang-key="save_book_btn">حفظ الكتاب</button>
                     </form>
                 </section>
 
-                <section class="card">
-                    <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة</h2>
+                <section class="card animated">
+                    <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة والعودة</h2>
                     <form id="loan-form">
-                        <!-- Les champs du formulaire (ISBN, Élève, etc.) -->
+                         <!-- Les champs du formulaire (ISBN, Élève, etc.) -->
+                        <div class="form-group">
+                             <label for="loan-isbn">ISBN الكتاب</label>
+                            <input type="text" id="loan-isbn" required>
+                        </div>
+                         <div class="form-group">
+                            <label for="student-name" data-lang-key="student_name_label">اسم الطالب</label>
+                            <input type="text" id="student-name" required>
+                        </div>
                         <button type="submit" class="btn" data-lang-key="loan_book_btn">إعارة الكتاب</button>
                         <button type="button" id="return-btn" class="btn btn-secondary" data-lang-key="return_book_btn">إرجاع الكتاب</button>
                     </form>
