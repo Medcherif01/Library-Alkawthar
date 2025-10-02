@@ -26,11 +26,11 @@
             <form id="login-form">
                 <div class="input-group">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="username" required placeholder="اسم المستخدم" data-lang-key-placeholder="username_label">
+                    <input type="text" id="username" required data-lang-key-placeholder="username_label">
                 </div>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="password" required placeholder="كلمة المرور" data-lang-key-placeholder="password_label">
+                    <input type="password" id="password" required data-lang-key-placeholder="password_label">
                 </div>
                 <button type="submit" class="btn" data-lang-key="login_btn">تسجيل الدخول</button>
                 <p id="login-error" class="error-message"></p>
@@ -59,7 +59,7 @@
                 <h2 data-lang-key="scanner_title"><i class="fas fa-barcode"></i> إدارة سريعة عبر الباركود</h2>
                 <div class="form-group">
                     <label for="isbn-scanner" data-lang-key="scanner_label">امسح ISBN الكتاب هنا أو أدخله يدويًا:</label>
-                    <input type="text" id="isbn-scanner" placeholder-lang-key="scanner_placeholder">
+                    <input type="text" id="isbn-scanner" data-lang-key-placeholder="scanner_placeholder">
                 </div>
                 <div id="book-details" class="book-details-view">
                     <p class="placeholder" data-lang-key="scanner_instruction">الرجاء مسح كتاب ضوئياً لعرض معلوماته.</p>
@@ -79,7 +79,6 @@
                 <section class="card animated">
                     <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد</h2>
                     <form id="add-book-form">
-                         <!-- Les champs du formulaire (ISBN, Titre, etc.) -->
                         <div class="form-group">
                             <label for="new-isbn">ISBN</label>
                             <input type="text" id="new-isbn" required>
@@ -95,7 +94,6 @@
                 <section class="card animated">
                     <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة والعودة</h2>
                     <form id="loan-form">
-                         <!-- Les champs du formulaire (ISBN, Élève, etc.) -->
                         <div class="form-group">
                              <label for="loan-isbn">ISBN الكتاب</label>
                             <input type="text" id="loan-isbn" required>
