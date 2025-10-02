@@ -232,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (translations[lang][key]) el.placeholder = translations[lang][key];
         });
         
-        // Mettre à jour le tableau après le changement de langue
         if (dashboardPage.style.display === 'block') {
             renderTable(books);
         }
