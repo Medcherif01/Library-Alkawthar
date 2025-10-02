@@ -56,7 +56,6 @@
 
         <main class="container">
 
-            <!-- SECTION STATISTIQUES -->
             <section class="card stats-card animated">
                  <h2 data-lang-key="stats_title"><i class="fas fa-chart-pie"></i> إحصائيات المكتبة</h2>
                 <div class="stats-container">
@@ -66,7 +65,6 @@
                 </div>
             </section>
 
-            <!-- MODULES D'ACTION RAPIDE RESTAURÉS -->
             <div class="columns">
                  <section class="card barcode-section animated">
                     <h2 data-lang-key="scanner_title"><i class="fas fa-barcode"></i> بحث سريع بالباركود</h2>
@@ -81,7 +79,7 @@
                 
                 <section class="card animated">
                     <h2 data-lang-key="excel_upload_title"><i class="fas fa-file-excel"></i> إضافة عبر ملف Excel</h2>
-                    <p data-lang-key="excel_instruction">اختر ملف (.xlsx, .csv) بالأعمدة: ISBN, Title, CornerName, CornerNumber</p>
+                    <p data-lang-key="excel_instruction">اختر ملف (.xlsx, .csv) بالأعمدة: ISBN, Title, CornerName, CornerNumber, Quantity</p>
                     <input type="file" id="excel-file-input" class="file-input" accept=".xlsx, .xls, .csv">
                     <label for="excel-file-input" class="btn btn-secondary file-label" data-lang-key="choose_file_btn"><i class="fas fa-upload"></i> اختر ملف...</label>
                     <button id="upload-excel-btn" class="btn" data-lang-key="upload_btn">رفع الملف</button>
@@ -89,7 +87,6 @@
                 </section>
             </div>
 
-            <!-- SECTION RECHERCHER UN LIVRE -->
             <section class="card animated">
                 <h2 data-lang-key="search_book_title"><i class="fas fa-search"></i> البحث في المخزون</h2>
                 <div class="form-group">
@@ -103,7 +100,7 @@
                                 <th data-lang-key="title_col">العنوان</th>
                                 <th data-lang-key="corner_name_col">اسم الركن</th>
                                 <th data-lang-key="corner_num_col">رقم الركن</th>
-                                <th data-lang-key="status_col">الحالة</th>
+                                <th data-lang-key="availability_col">الإتاحة</th>
                             </tr>
                         </thead>
                         <tbody id="books-table-body"></tbody>
@@ -112,7 +109,6 @@
             </section>
 
             <div class="columns">
-                <!-- FORMULAIRE D'AJOUT DE LIVRE -->
                 <section class="card animated">
                     <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد يدوياً</h2>
                     <form id="add-book-form">
@@ -120,11 +116,11 @@
                         <div class="form-group"><label for="new-title" data-lang-key="book_title_label">عنوان الكتاب</label><input type="text" id="new-title" required></div>
                         <div class="form-group"><label for="new-corner-name" data-lang-key="corner_name_label">اسم الركن</label><input type="text" id="new-corner-name" required></div>
                         <div class="form-group"><label for="new-corner-number" data-lang-key="corner_num_label">رقم الركن</label><input type="text" id="new-corner-number" required></div>
+                        <div class="form-group"><label for="new-quantity" data-lang-key="quantity_label">الكمية</label><input type="number" id="new-quantity" required min="1" value="1"></div>
                         <button type="submit" class="btn" data-lang-key="save_book_btn">حفظ الكتاب</button>
                     </form>
                 </section>
 
-                <!-- FORMULAIRE DE GESTION DES PRÊTS -->
                 <section class="card animated">
                     <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة والعودة</h2>
                     <form id="loan-form">
