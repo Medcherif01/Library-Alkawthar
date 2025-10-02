@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliothèque Alkawthar</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Ajout d'une librairie d'icônes (Font Awesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="fas fa-book-open"></i>
+            <h1>Bibliothèque Alkawthar</h1>
+        </div>
+        <nav>
+            <p>Écoles Internationales</p>
+        </nav>
+    </header>
+
+    <main class="container">
+
+        <!-- Section pour la gestion via le lecteur de code-barres -->
+        <section class="card barcode-section">
+            <h2><i class="fas fa-barcode"></i> Gestion Rapide par Code-Barres</h2>
+            <div class="form-group">
+                <label for="isbn-scanner">Scanner l'ISBN du livre ici :</label>
+                <input type="text" id="isbn-scanner" placeholder="En attente du scan...">
+            </div>
+            <div id="book-details" class="book-details-view">
+                <!-- Les détails du livre scanné s'afficheront ici -->
+                <p class="placeholder">Veuillez scanner un livre pour voir ses informations.</p>
+            </div>
+        </section>
+
+        <div class="columns">
+            <!-- Section pour l'enregistrement d'un nouveau livre -->
+            <section class="card">
+                <h2><i class="fas fa-plus-circle"></i> Enregistrer un Nouveau Livre</h2>
+                <form id="add-book-form">
+                    <div class="form-group">
+                        <label for="isbn">ISBN</label>
+                        <input type="text" id="isbn" required placeholder="978-2-07-064302-9">
+                    </div>
+                    <div class="form-group">
+                        <label for="title">Titre du livre</label>
+                        <input type="text" id="title" required placeholder="Le Petit Prince">
+                    </div>
+                    <div class="form-group">
+                        <label for="section">Section</label>
+                        <select id="section" required>
+                            <option value="français">Français</option>
+                            <option value="anglais">Anglais</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="corner-name">Nom du Coin</label>
+                        <input type="text" id="corner-name" required placeholder="Aventures">
+                    </div>
+                    <div class="form-group">
+                        <label for="corner-number">Numéro du Coin</label>
+                        <input type="number" id="corner-number" required placeholder="12">
+                    </div>
+                    <button type="submit" class="btn">Enregistrer le Livre</button>
+                </form>
+            </section>
+
+            <!-- Section pour la gestion des prêts -->
+            <section class="card">
+                <h2><i class="fas fa-hand-holding-heart"></i> Gérer une Allocation</h2>
+                <form id="loan-form">
+                    <div class="form-group">
+                        <label for="loan-isbn">ISBN du livre (scanné)</label>
+                        <input type="text" id="loan-isbn" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="student-name">Nom de l'élève</label>
+                        <input type="text" id="student-name" required placeholder="Nom complet de l'élève">
+                    </div>
+                    <div class="form-group">
+                        <label for="coordinator-name">Coordinatrice Responsable</label>
+                        <input type="text" id="coordinator-name" required>
+                    </div>
+                    <button type="submit" class="btn">Allouer le Livre</button>
+                    <button type="button" id="return-btn" class="btn btn-secondary">Remettre le Livre</button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Écoles Internationales Alkawthar - Tous droits réservés.</p>
+    </footer>
+
+    <script src="index.js"></script>
+</body>
+</html>

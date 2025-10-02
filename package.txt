@@ -1,0 +1,14 @@
+{
+  "name": "alkawthar-library",
+  "version": "1.0.0",
+  "description": "Système de gestion de la bibliothèque pour les écoles internationales Alkawthar.",
+  "main": "index.js",
+  "scripts": {
+    "start": "serve"
+  },
+  "dependencies": {
+    "serve": "^14.0.1"
+  },
+  "author": "Alkawthar Schools",
+  "license": "ISC"
+}
