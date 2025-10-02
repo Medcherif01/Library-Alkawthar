@@ -58,35 +58,40 @@
 
             <!-- SECTION STATISTIQUES -->
             <section class="card stats-card animated">
-                <h2 data-lang-key="stats_title"><i class="fas fa-chart-pie"></i> إحصائيات المكتبة</h2>
+                 <h2 data-lang-key="stats_title"><i class="fas fa-chart-pie"></i> إحصائيات المكتبة</h2>
                 <div class="stats-container">
-                    <div class="stat-item">
-                        <i class="fas fa-book"></i>
-                        <div>
-                            <span id="total-books-stat">0</span>
-                            <p data-lang-key="total_books">إجمالي الكتب</p>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-hand-holding-heart"></i>
-                        <div>
-                            <span id="loaned-books-stat">0</span>
-                            <p data-lang-key="loaned_books">الكتب المعارة</p>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-check-circle"></i>
-                        <div>
-                            <span id="available-books-stat">0</span>
-                            <p data-lang-key="available_books">الكتب المتاحة</p>
-                        </div>
-                    </div>
+                    <div class="stat-item"><i class="fas fa-book"></i><div><span id="total-books-stat">0</span><p data-lang-key="total_books">إجمالي الكتب</p></div></div>
+                    <div class="stat-item"><i class="fas fa-hand-holding-heart"></i><div><span id="loaned-books-stat">0</span><p data-lang-key="loaned_books">الكتب المعارة</p></div></div>
+                    <div class="stat-item"><i class="fas fa-check-circle"></i><div><span id="available-books-stat">0</span><p data-lang-key="available_books">الكتب المتاحة</p></div></div>
                 </div>
             </section>
 
+            <!-- MODULES D'ACTION RAPIDE RESTAURÉS -->
+            <div class="columns">
+                 <section class="card barcode-section animated">
+                    <h2 data-lang-key="scanner_title"><i class="fas fa-barcode"></i> بحث سريع بالباركود</h2>
+                    <div class="form-group">
+                        <label for="isbn-scanner" data-lang-key="scanner_label">امسح ISBN الكتاب هنا:</label>
+                        <input type="text" id="isbn-scanner" data-lang-key-placeholder="scanner_placeholder">
+                    </div>
+                    <div id="book-details-view" class="book-details-view">
+                        <p class="placeholder" data-lang-key="scanner_instruction">الرجاء مسح كتاب ضوئياً لعرض معلوماته.</p>
+                    </div>
+                </section>
+                
+                <section class="card animated">
+                    <h2 data-lang-key="excel_upload_title"><i class="fas fa-file-excel"></i> إضافة عبر ملف Excel</h2>
+                    <p data-lang-key="excel_instruction">اختر ملف (.xlsx, .csv) بالأعمدة: ISBN, Title, CornerName, CornerNumber</p>
+                    <input type="file" id="excel-file-input" class="file-input" accept=".xlsx, .xls, .csv">
+                    <label for="excel-file-input" class="btn btn-secondary file-label" data-lang-key="choose_file_btn"><i class="fas fa-upload"></i> اختر ملف...</label>
+                    <button id="upload-excel-btn" class="btn" data-lang-key="upload_btn">رفع الملف</button>
+                    <div id="upload-status"></div>
+                </section>
+            </div>
+
             <!-- SECTION RECHERCHER UN LIVRE -->
             <section class="card animated">
-                <h2 data-lang-key="search_book_title"><i class="fas fa-search"></i> البحث عن كتاب</h2>
+                <h2 data-lang-key="search_book_title"><i class="fas fa-search"></i> البحث في المخزون</h2>
                 <div class="form-group">
                     <input type="text" id="search-input" data-lang-key-placeholder="search_placeholder" placeholder="ابحث بالعنوان أو ISBN...">
                 </div>
@@ -101,8 +106,7 @@
                                 <th data-lang-key="status_col">الحالة</th>
                             </tr>
                         </thead>
-                        <tbody id="books-table-body">
-                        </tbody>
+                        <tbody id="books-table-body"></tbody>
                     </table>
                 </div>
             </section>
@@ -110,24 +114,12 @@
             <div class="columns">
                 <!-- FORMULAIRE D'AJOUT DE LIVRE -->
                 <section class="card animated">
-                    <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد</h2>
+                    <h2 data-lang-key="add_book_title"><i class="fas fa-plus-circle"></i> تسجيل كتاب جديد يدوياً</h2>
                     <form id="add-book-form">
-                        <div class="form-group">
-                            <label for="new-isbn">ISBN</label>
-                            <input type="text" id="new-isbn" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="new-title" data-lang-key="book_title_label">عنوان الكتاب</label>
-                            <input type="text" id="new-title" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="new-corner-name" data-lang-key="corner_name_label">اسم الركن</label>
-                            <input type="text" id="new-corner-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="new-corner-number" data-lang-key="corner_num_label">رقم الركن</label>
-                            <input type="text" id="new-corner-number" required>
-                        </div>
+                        <div class="form-group"><label for="new-isbn">ISBN</label><input type="text" id="new-isbn" required></div>
+                        <div class="form-group"><label for="new-title" data-lang-key="book_title_label">عنوان الكتاب</label><input type="text" id="new-title" required></div>
+                        <div class="form-group"><label for="new-corner-name" data-lang-key="corner_name_label">اسم الركن</label><input type="text" id="new-corner-name" required></div>
+                        <div class="form-group"><label for="new-corner-number" data-lang-key="corner_num_label">رقم الركن</label><input type="text" id="new-corner-number" required></div>
                         <button type="submit" class="btn" data-lang-key="save_book_btn">حفظ الكتاب</button>
                     </form>
                 </section>
@@ -136,51 +128,17 @@
                 <section class="card animated">
                     <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة والعودة</h2>
                     <form id="loan-form">
-                        <div class="form-group">
-                            <label for="loan-isbn">ISBN الكتاب</label>
-                            <input type="text" id="loan-isbn" required>
-                        </div>
-                        <div class="form-group auto-filled">
-                            <label data-lang-key="book_title_label">عنوان الكتاب</label>
-                            <p id="loan-book-title">-</p>
-                        </div>
-                        <div class="form-group auto-filled">
-                            <label data-lang-key="corner_name_label">اسم الركن</label>
-                            <p id="loan-corner-name">-</p>
-                        </div>
-                        <div class="form-group auto-filled">
-                            <label data-lang-key="corner_num_label">رقم الركن</label>
-                            <p id="loan-corner-number">-</p>
-                        </div>
+                        <div class="form-group"><label for="loan-isbn">ISBN الكتاب</label><input type="text" id="loan-isbn" required></div>
+                        <div class="form-group auto-filled"><label data-lang-key="book_title_label">عنوان الكتاب</label><p id="loan-book-title">-</p></div>
+                        <div class="form-group auto-filled"><label data-lang-key="corner_name_label">اسم الركن</label><p id="loan-corner-name">-</p></div>
+                        <div class="form-group auto-filled"><label data-lang-key="corner_num_label">رقم الركن</label><p id="loan-corner-number">-</p></div>
                         <hr>
-                        <div class="form-group">
-                            <label for="student-name" data-lang-key="student_name_label">اسم الطالب</label>
-                            <input type="text" id="student-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="student-section" data-lang-key="section_label">القسم</label>
-                            <select id="student-section" required>
-                                <option value="" disabled selected data-lang-key="select_section">اختر القسم</option>
-                                <option value="Français" data-lang-key="section_french">فرنسي</option>
-                                <option value="Anglais" data-lang-key="section_english">إنجليزي</option>
-                            </select>
-                        </div>
-                         <div class="form-group">
-                            <label for="student-class" data-lang-key="class_label">الفصل</label>
-                            <input type="text" id="student-class" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="loan-date" data-lang-key="loan_date_label">تاريخ الإعارة</label>
-                            <input type="date" id="loan-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="return-date" data-lang-key="return_date_label">تاريخ التسليم</label>
-                            <input type="date" id="return-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="coordinator-name" data-lang-key="coordinator_label">اسم المنسق المسؤول</label>
-                            <input type="text" id="coordinator-name" required>
-                        </div>
+                        <div class="form-group"><label for="student-name" data-lang-key="student_name_label">اسم الطالب</label><input type="text" id="student-name" required></div>
+                        <div class="form-group"><label for="student-section" data-lang-key="section_label">القسم</label><select id="student-section" required><option value="" disabled selected data-lang-key="select_section">اختر القسم</option><option value="Français" data-lang-key="section_french">فرنسي</option><option value="Anglais" data-lang-key="section_english">إنجليزي</option></select></div>
+                        <div class="form-group"><label for="student-class" data-lang-key="class_label">الفصل</label><input type="text" id="student-class" required></div>
+                        <div class="form-group"><label for="loan-date" data-lang-key="loan_date_label">تاريخ الإعارة</label><input type="date" id="loan-date" required></div>
+                        <div class="form-group"><label for="return-date" data-lang-key="return_date_label">تاريخ التسليم</label><input type="date" id="return-date" required></div>
+                        <div class="form-group"><label for="coordinator-name" data-lang-key="coordinator_label">اسم المنسق المسؤول</label><input type="text" id="coordinator-name" required></div>
                         <button type="submit" class="btn" data-lang-key="loan_book_btn">إعارة الكتاب</button>
                         <button type="button" id="return-btn" class="btn btn-secondary" data-lang-key="return_book_btn">إرجاع الكتاب</button>
                     </form>
@@ -191,7 +149,6 @@
             <p data-lang-key="footer_text">&copy; 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة.</p>
         </footer>
     </div>
-
     <script src="index.js"></script>
 </body>
 </html>
