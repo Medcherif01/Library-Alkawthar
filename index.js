@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     
     // ===================================
-    // SIMULATION D'UNE BASE DE DONNÉES
+    // NOUVELLE STRUCTURE DE DONNÉES
     // ===================================
     let books = [
-        { isbn: '978-3-16-148410-0', title: 'Le Petit Prince', cornerName: 'Récits Français', cornerNumber: 'A1', status: 'disponible' },
-        { isbn: '978-1-40-885565-2', title: 'Harry Potter and the Philosopher\'s Stone', cornerName: 'Fantasy Anglaise', cornerNumber: 'B3', status: 'disponible' },
-        { isbn: '978-0-74-753269-9', title: 'Les Misérables', cornerName: 'Classiques Français', cornerNumber: 'A2', status: 'emprunté' }
+        { isbn: '978-3-16-148410-0', title: 'Le Petit Prince', cornerName: 'Récits Français', cornerNumber: 'A1', totalCopies: 5, loanedCopies: 2 },
+        { isbn: '978-1-40-885565-2', title: 'Harry Potter and the Philosopher\'s Stone', cornerName: 'Fantasy Anglaise', cornerNumber: 'B3', totalCopies: 10, loanedCopies: 10 },
+        { isbn: '978-0-74-753269-9', title: 'Les Misérables', cornerName: 'Classiques Français', cornerNumber: 'A2', totalCopies: 3, loanedCopies: 1 }
     ];
 
     // ===================================
@@ -17,15 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const loginError = document.getElementById('login-error');
     const logoutBtn = document.getElementById('logout-btn');
-    
-    // Modules restaurés
     const isbnScanner = document.getElementById('isbn-scanner');
     const bookDetailsView = document.getElementById('book-details-view');
     const excelFileInput = document.getElementById('excel-file-input');
     const uploadExcelBtn = document.getElementById('upload-excel-btn');
     const uploadStatus = document.getElementById('upload-status');
-
-    // Modules récents
     const totalBooksStat = document.getElementById('total-books-stat');
     const loanedBooksStat = document.getElementById('loaned-books-stat');
     const availableBooksStat = document.getElementById('available-books-stat');
@@ -42,9 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
     // FONCTIONS PRINCIPALES
     // ===================================
+
     const updateStats = () => {
-        const totalBooks = books.length;
-        const loanedBooks = books.filter(b => b.status === 'emprunté').length;
+        const totalBooks = books.reduce((sum, book) => sum + book.totalCopies, 0);
+        const loanedBooks = books.reduce((sum, book) => sum + book.loanedCopies, 0);
+        
         totalBooksStat.textContent = totalBooks;
         loanedBooksStat.textContent = loanedBooks;
         availableBooksStat.textContent = totalBooks - loanedBooks;
@@ -52,13 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderTable = (bookList) => {
         booksTableBody.innerHTML = '';
-        const currentLang = document.documentElement.lang;
-        const statusTexts = {
-            ar: { disponible: 'متاح', emprunté: 'معار' }, fr: { disponible: 'Disponible', emprunté: 'Emprunté' }, en: { disponible: 'Available', emprunté: 'Loaned' }
+        const currentLang = document.documentElement.lang || 'ar';
+        const availabilityTexts = {
+            ar: "متاح", fr: "disponible(s)", en: "available"
         };
         bookList.forEach(book => {
-            const statusClass = book.status === 'disponible' ? 'status-available' : 'status-loaned';
-            booksTableBody.innerHTML += `<tr><td>${book.isbn}</td><td>${book.title}</td><td>${book.cornerName}</td><td>${book.cornerNumber}</td><td><span class="${statusClass}">${statusTexts[currentLang][book.status]}</span></td></tr>`;
+            const availableCopies = book.totalCopies - book.loanedCopies;
+            const availabilityClass = availableCopies > 0 ? 'status-available' : 'status-unavailable';
+            const availabilityText = `${availableCopies} / ${book.totalCopies} ${availabilityTexts[currentLang]}`;
+            booksTableBody.innerHTML += `<tr><td>${book.isbn}</td><td>${book.title}</td><td>${book.cornerName}</td><td>${book.cornerNumber}</td><td><span class="${availabilityClass}">${availabilityText}</span></td></tr>`;
         });
     };
     
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
     // GESTION DES ÉVÉNEMENTS
     // ===================================
+
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -95,31 +96,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Logique du scanner de code-barres (RESTAURÉE) ---
     if (isbnScanner) {
         isbnScanner.addEventListener('change', (e) => {
             const isbn = e.target.value;
             const book = books.find(b => b.isbn === isbn);
+            const currentLang = document.documentElement.lang;
+            const detailsTexts = {
+                ar: { total: "الكمية الإجمالية", loaned: "نسخ غير مُرجعة" },
+                fr: { total: "Nombre total de copies", loaned: "Copies non remises" },
+                en: { total: "Total copies", loaned: "Copies not returned" }
+            };
+
             if (book) {
-                const statusText = book.status === 'disponible' ? 'متاح' : 'معار';
-                bookDetailsView.innerHTML = `<strong>${book.title}</strong><br>الركن: ${book.cornerName} (${book.cornerNumber})<br>الحالة: ${statusText}`;
+                bookDetailsView.innerHTML = `<strong>${book.title}</strong><br>${detailsTexts[currentLang].total}: ${book.totalCopies}<br>${detailsTexts[currentLang].loaned}: ${book.loanedCopies}`;
             } else {
                 bookDetailsView.innerHTML = `<p class="placeholder">لم يتم العثور على كتاب بهذا ISBN.</p>`;
             }
+            e.target.value = '';
         });
     }
-    
-    // --- Logique d'import Excel (RESTAURÉE) ---
+
     if(uploadExcelBtn) {
         uploadExcelBtn.addEventListener('click', () => {
              if (excelFileInput.files.length === 0) {
-                uploadStatus.textContent = 'الرجاء اختيار ملف أولاً.';
-                return;
+                uploadStatus.textContent = 'الرجاء اختيار ملف أولاً.'; return;
             }
-            // Logique de lecture de fichier (simplifiée)
             uploadStatus.textContent = `جاري معالجة الملف: ${excelFileInput.files[0].name}...`;
             alert("وظيفة استيراد Excel قيد التطوير. سيتم دمج البيانات من الملف هنا.");
-            // ICI : Ajouter la logique complète de lecture du fichier avec la librairie SheetJS/XLSX
         });
     }
 
@@ -134,10 +137,17 @@ document.addEventListener('DOMContentLoaded', () => {
         addBookForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const newIsbn = document.getElementById('new-isbn').value;
-            if (books.find(b => b.isbn === newIsbn)) { alert('هذا ISBN موجود بالفعل!'); return; }
-            books.push({ isbn: newIsbn, title: document.getElementById('new-title').value, cornerName: document.getElementById('new-corner-name').value, cornerNumber: document.getElementById('new-corner-number').value, status: 'disponible' });
+            const existingBook = books.find(b => b.isbn === newIsbn);
+            const quantity = parseInt(document.getElementById('new-quantity').value, 10);
+
+            if (existingBook) {
+                existingBook.totalCopies += quantity;
+                alert(`تم تحديث الكمية. أصبح لدى كتاب "${existingBook.title}" الآن ${existingBook.totalCopies} نسخ.`);
+            } else {
+                books.push({ isbn: newIsbn, title: document.getElementById('new-title').value, cornerName: document.getElementById('new-corner-name').value, cornerNumber: document.getElementById('new-corner-number').value, totalCopies: quantity, loanedCopies: 0 });
+                alert('تمت إضافة الكتاب بنجاح!');
+            }
             addBookForm.reset();
-            alert('تمت إضافة الكتاب بنجاح!');
             initializeDashboard();
         });
     }
@@ -149,7 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 loanBookTitle.textContent = book.title;
                 loanCornerName.textContent = book.cornerName;
                 loanCornerNumber.textContent = book.cornerNumber;
-                if (book.status === 'emprunté') { alert('تحذير: هذا الكتاب معار حاليا!'); }
+                if (book.loanedCopies >= book.totalCopies) {
+                    alert('تحذير: جميع نسخ هذا الكتاب معارة حاليا!');
+                }
             } else {
                 loanBookTitle.textContent = '-'; loanCornerName.textContent = '-'; loanCornerNumber.textContent = '-';
             }
@@ -160,26 +172,38 @@ document.addEventListener('DOMContentLoaded', () => {
         loanForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const book = books.find(b => b.isbn === loanIsbnInput.value);
-            if(book && book.status === 'disponible') {
-                book.status = 'emprunté';
-                alert(`تمت إعارة كتاب "${book.title}" بنجاح!`);
-                loanForm.reset();
-                loanBookTitle.textContent = '-'; loanCornerName.textContent = '-'; loanCornerNumber.textContent = '-';
-                initializeDashboard();
-            } else { alert('لا يمكن إعارة هذا الكتاب. قد يكون غير موجود أو معار بالفعل.'); }
+            if (book) {
+                if (book.loanedCopies < book.totalCopies) {
+                    book.loanedCopies++;
+                    alert(`تمت إعارة نسخة من كتاب "${book.title}" بنجاح!`);
+                    loanForm.reset();
+                    loanBookTitle.textContent = '-'; loanCornerName.textContent = '-'; loanCornerNumber.textContent = '-';
+                    initializeDashboard();
+                } else {
+                    alert('لا يمكن إعارة هذا الكتاب. جميع النسخ معارة بالفعل.');
+                }
+            } else {
+                alert('لم يتم العثور على كتاب بهذا ISBN.');
+            }
         });
     }
 
     if (returnBtn) {
         returnBtn.addEventListener('click', () => {
             const book = books.find(b => b.isbn === loanIsbnInput.value);
-            if(book && book.status === 'emprunté') {
-                book.status = 'disponible';
-                alert(`تم إرجاع كتاب "${book.title}" بنجاح!`);
-                loanForm.reset();
-                loanBookTitle.textContent = '-'; loanCornerName.textContent = '-'; loanCornerNumber.textContent = '-';
-                initializeDashboard();
-            } else { alert('لا يمكن إرجاع هذا الكتاب. قد يكون غير موجود أو غير معار.'); }
+            if (book) {
+                if (book.loanedCopies > 0) {
+                    book.loanedCopies--;
+                    alert(`تم إرجاع نسخة من كتاب "${book.title}" بنجاح!`);
+                    loanForm.reset();
+                    loanBookTitle.textContent = '-'; loanCornerName.textContent = '-'; loanCornerNumber.textContent = '-';
+                    initializeDashboard();
+                } else {
+                    alert('لا يمكن إرجاع هذا الكتاب. جميع النسخ موجودة بالفعل.');
+                }
+            } else {
+                alert('لم يتم العثور على كتاب بهذا ISBN.');
+            }
         });
     }
 
@@ -187,9 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // SYSTÈME DE TRADUCTION
     // ===================================
     const translations = {
-        ar: { title: "مكتبة الكوثر", welcome_title: "مرحباً بكم في مكتبة مدارس الكوثر العالمية", welcome_subtitle: "الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.", username_label: "اسم المستخدم", password_label: "كلمة المرور", login_btn: "تسجيل الدخول", dashboard_title: "لوحة تحكم مكتبة الكوثر", school_name: "مدارس الكوثر العالمية", logout_btn_title: "تسجيل الخروج", stats_title: "إحصائيات المكتبة", total_books: "إجمالي الكتب", loaned_books: "الكتب المعارة", available_books: "الكتب المتاحة", scanner_title: "بحث سريع بالباركود", scanner_label: "امسح ISBN الكتاب هنا:", scanner_placeholder: "امسح الباركود...", scanner_instruction: "الرجاء مسح كتاب ضوئياً لعرض معلوماته.", excel_upload_title: "إضافة عبر ملف Excel", excel_instruction: "اختر ملف (.xlsx, .csv) بالأعمدة: ISBN, Title, CornerName, CornerNumber", choose_file_btn: "اختر ملف...", upload_btn: "رفع الملف", search_book_title: "البحث في المخزون", search_placeholder: "ابحث بالعنوان أو ISBN...", isbn_col: "ISBN", title_col: "العنوان", corner_name_col: "اسم الركن", corner_num_col: "رقم الركن", status_col: "الحالة", add_book_title: "تسجيل كتاب جديد يدوياً", book_title_label: "عنوان الكتاب", save_book_btn: "حفظ الكتاب", manage_loan_title: "إدارة الإعارة والعودة", student_name_label: "اسم الطالب", loan_book_btn: "إعارة الكتاب", return_book_btn: "إرجاع الكتاب", corner_name_label: "اسم الركن", corner_num_label: "رقم الركن", section_label: "القسم", select_section: "اختر القسم", section_french: "فرنسي", section_english: "إنجليزي", class_label: "الفصل", loan_date_label: "تاريخ الإعارة", return_date_label: "تاريخ التسليم", coordinator_label: "اسم المنسق المسؤول", footer_text: "© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة." },
-        fr: { title: "Bibliothèque Al-Kawthar", welcome_title: "Bienvenue à la bibliothèque des écoles Al-Kawthar", welcome_subtitle: "Veuillez entrer vos identifiants pour accéder.", username_label: "Nom d'utilisateur", password_label: "Mot de passe", login_btn: "Connexion", dashboard_title: "Tableau de bord de la bibliothèque", school_name: "Écoles Internationales Al-Kawthar", logout_btn_title: "Déconnexion", stats_title: "Statistiques", total_books: "Total Livres", loaned_books: "Livres Empruntés", available_books: "Livres Disponibles", scanner_title: "Scan rapide par code-barres", scanner_label: "Scannez l'ISBN du livre ici :", scanner_placeholder: "Scanner le code-barres...", scanner_instruction: "Veuillez scanner un livre pour voir ses détails.", excel_upload_title: "Ajout via fichier Excel", excel_instruction: "Choisissez un fichier (.xlsx, .csv) avec les colonnes : ISBN, Title, CornerName, CornerNumber", choose_file_btn: "Choisir un fichier...", upload_btn: "Télécharger", search_book_title: "Rechercher dans l'inventaire", search_placeholder: "Rechercher par titre ou ISBN...", isbn_col: "ISBN", title_col: "Titre", corner_name_col: "Nom du Coin", corner_num_col: "N° Coin", status_col: "Statut", add_book_title: "Ajouter un livre manuellement", book_title_label: "Titre du livre", save_book_btn: "Enregistrer", manage_loan_title: "Gérer les prêts et retours", student_name_label: "Nom de l'élève", loan_book_btn: "Emprunter", return_book_btn: "Retourner", corner_name_label: "Nom du coin", corner_num_label: "Numéro du coin", section_label: "Section", select_section: "Choisir la section", section_french: "Français", section_english: "Anglais", class_label: "Classe", loan_date_label: "Date d'emprunt", return_date_label: "Date de retour", coordinator_label: "Nom du coordinateur", footer_text: "© 2025 Écoles Internationales Al-Kawthar - Tous droits réservés." },
-        en: { title: "Alkawthar Library", welcome_title: "Welcome to Alkawthar International Schools Library", welcome_subtitle: "Please enter your credentials to access the dashboard.", username_label: "Username", password_label: "Password", login_btn: "Login", dashboard_title: "Library Dashboard", school_name: "Alkawthar International Schools", logout_btn_title: "Logout", stats_title: "Library Statistics", total_books: "Total Books", loaned_books: "Loaned Books", available_books: "Available Books", scanner_title: "Quick Barcode Scan", scanner_label: "Scan the book's ISBN here:", scanner_placeholder: "Scan barcode...", scanner_instruction: "Please scan a book to see its details.", excel_upload_title: "Add via Excel File", excel_instruction: "Choose a file (.xlsx, .csv) with columns: ISBN, Title, CornerName, CornerNumber", choose_file_btn: "Choose File...", upload_btn: "Upload File", search_book_title: "Search Inventory", search_placeholder: "Search by title or ISBN...", isbn_col: "ISBN", title_col: "Title", corner_name_col: "Corner Name", corner_num_col: "Corner N°", status_col: "Status", add_book_title: "Add a New Book Manually", book_title_label: "Book Title", save_book_btn: "Save Book", manage_loan_title: "Manage Loans & Returns", student_name_label: "Student Name", loan_book_btn: "Loan Book", return_book_btn: "Return Book", corner_name_label: "Corner name", corner_num_label: "Corner number", section_label: "Section", select_section: "Select section", section_french: "French", section_english: "English", class_label: "Class", loan_date_label: "Loan date", return_date_label: "Return date", coordinator_label: "Coordinator's name", footer_text: "© 2025 Alkawthar International Schools - All rights reserved." }
+        ar: { title: "مكتبة الكوثر", welcome_title: "مرحباً بكم في مكتبة مدارس الكوثر العالمية", welcome_subtitle: "الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.", username_label: "اسم المستخدم", password_label: "كلمة المرور", login_btn: "تسجيل الدخول", dashboard_title: "لوحة تحكم مكتبة الكوثر", school_name: "مدارس الكوثر العالمية", logout_btn_title: "تسجيل الخروج", stats_title: "إحصائيات المكتبة", total_books: "إجمالي الكتب", loaned_books: "الكتب المعارة", available_books: "الكتب المتاحة", scanner_title: "بحث سريع بالباركود", scanner_label: "امسح ISBN الكتاب هنا:", scanner_placeholder: "امسح الباركود...", scanner_instruction: "الرجاء مسح كتاب ضوئياً لعرض معلوماته.", excel_upload_title: "إضافة عبر ملف Excel", excel_instruction: "اختر ملف (.xlsx, .csv) بالأعمدة: ISBN, Title, CornerName, CornerNumber, Quantity", choose_file_btn: "اختر ملف...", upload_btn: "رفع الملف", search_book_title: "البحث في المخزون", search_placeholder: "ابحث بالعنوان أو ISBN...", isbn_col: "ISBN", title_col: "العنوان", corner_name_col: "اسم الركن", corner_num_col: "رقم الركن", availability_col: "الإتاحة", add_book_title: "تسجيل كتاب جديد يدوياً", book_title_label: "عنوان الكتاب", save_book_btn: "حفظ الكتاب", manage_loan_title: "إدارة الإعارة والعودة", student_name_label: "اسم الطالب", loan_book_btn: "إعارة الكتاب", return_book_btn: "إرجاع الكتاب", corner_name_label: "اسم الركن", corner_num_label: "رقم الركن", quantity_label: "الكمية", section_label: "القسم", select_section: "اختر القسم", section_french: "فرنسي", section_english: "إنجليزي", class_label: "الفصل", loan_date_label: "تاريخ الإعارة", return_date_label: "تاريخ التسليم", coordinator_label: "اسم المنسق المسؤول", footer_text: "© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة." },
+        fr: { title: "Bibliothèque Al-Kawthar", welcome_title: "Bienvenue à la bibliothèque des écoles Al-Kawthar", welcome_subtitle: "Veuillez entrer vos identifiants pour accéder.", username_label: "Nom d'utilisateur", password_label: "Mot de passe", login_btn: "Connexion", dashboard_title: "Tableau de bord de la bibliothèque", school_name: "Écoles Internationales Al-Kawthar", logout_btn_title: "Déconnexion", stats_title: "Statistiques", total_books: "Total Livres", loaned_books: "Livres Empruntés", available_books: "Livres Disponibles", scanner_title: "Scan rapide par code-barres", scanner_label: "Scannez l'ISBN du livre ici :", scanner_placeholder: "Scanner le code-barres...", scanner_instruction: "Veuillez scanner un livre pour voir ses détails.", excel_upload_title: "Ajout via fichier Excel", excel_instruction: "Choisissez un fichier (.xlsx, .csv) avec les colonnes : ISBN, Title, CornerName, CornerNumber, Quantity", choose_file_btn: "Choisir un fichier...", upload_btn: "Télécharger", search_book_title: "Rechercher dans l'inventaire", search_placeholder: "Rechercher par titre ou ISBN...", isbn_col: "ISBN", title_col: "Titre", corner_name_col: "Nom du Coin", corner_num_col: "N° Coin", availability_col: "Disponibilité", add_book_title: "Ajouter un livre manuellement", book_title_label: "Titre du livre", save_book_btn: "Enregistrer", manage_loan_title: "Gérer les prêts et retours", student_name_label: "Nom de l'élève", loan_book_btn: "Emprunter", return_book_btn: "Retourner", corner_name_label: "Nom du coin", corner_num_label: "Numéro du coin", quantity_label: "Quantité", section_label: "Section", select_section: "Choisir la section", section_french: "Français", section_english: "Anglais", class_label: "Classe", loan_date_label: "Date d'emprunt", return_date_label: "Date de retour", coordinator_label: "Nom du coordinateur", footer_text: "© 2025 Écoles Internationales Al-Kawthar - Tous droits réservés." },
+        en: { title: "Alkawthar Library", welcome_title: "Welcome to Alkawthar International Schools Library", welcome_subtitle: "Please enter your credentials to access the dashboard.", username_label: "Username", password_label: "Password", login_btn: "Login", dashboard_title: "Library Dashboard", school_name: "Alkawthar International Schools", logout_btn_title: "Logout", stats_title: "Library Statistics", total_books: "Total Books", loaned_books: "Loaned Books", available_books: "Available Books", scanner_title: "Quick Barcode Scan", scanner_label: "Scan the book's ISBN here:", scanner_placeholder: "Scan barcode...", scanner_instruction: "Please scan a book to see its details.", excel_upload_title: "Add via Excel File", excel_instruction: "Choose a file (.xlsx, .csv) with columns: ISBN, Title, CornerName, CornerNumber, Quantity", choose_file_btn: "Choose File...", upload_btn: "Upload File", search_book_title: "Search Inventory", search_placeholder: "Search by title or ISBN...", isbn_col: "ISBN", title_col: "Title", corner_name_col: "Corner Name", corner_num_col: "Corner N°", availability_col: "Availability", add_book_title: "Add a New Book Manually", book_title_label: "Book Title", save_book_btn: "Save Book", manage_loan_title: "Manage Loans & Returns", student_name_label: "Student Name", loan_book_btn: "Loan Book", return_book_btn: "Return Book", corner_name_label: "Corner name", corner_num_label: "Corner number", quantity_label: "Quantity", section_label: "Section", select_section: "Select section", section_french: "French", section_english: "English", class_label: "Class", loan_date_label: "Loan date", return_date_label: "Return date", coordinator_label: "Coordinator's name", footer_text: "© 2025 Alkawthar International Schools - All rights reserved." }
     };
     const switchLanguage = (lang) => {
         document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
