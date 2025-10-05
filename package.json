@@ -1,10 +1,10 @@
 {
-  "name": "alkawthar-library-fullstack",
+  "name": "alkawthar-library-final",
   "version": "1.0.0",
   "description": "Système de gestion de la bibliothèque pour les écoles Alkawthar.",
-  "main": "backend/server.js",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node backend/server.js"
+    "start": "node api/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
