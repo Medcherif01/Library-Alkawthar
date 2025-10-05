@@ -4,25 +4,28 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// --- MIDDLEWARES IMPORTANTS ---
+// Doivent être placés AVANT les routes
+app.use(cors()); // Active CORS pour toutes les requêtes
+app.use(express.json({ limit: '10mb' })); // Permet de recevoir des données JSON (avec une limite plus grande pour les fichiers Excel)
 
 // --- CONNEXION À MONGODB ---
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connecté à MongoDB avec succès !'))
-  .catch((err) => console.error('Erreur de connexion à MongoDB:', err));
+  .then(() => console.log('✅ Connecté à MongoDB avec succès !'))
+  .catch((err) => console.error('❌ Erreur de connexion à MongoDB:', err));
 
 // --- MODÈLES DE DONNÉES (SCHEMAS) ---
 const BookSchema = new mongoose.Schema({
-    isbn: { type: String, required: true, unique: true },
-    title: { type: String, required: true },
+    isbn: { type: String, required: true, unique: true, trim: true },
+    title: { type: String, required: true, trim: true },
     subject: String,
     level: String,
     language: String,
     cornerName: String,
     cornerNumber: String,
-    totalCopies: { type: Number, default: 1 },
-    loanedCopies: { type: Number, default: 0 }
+    totalCopies: { type: Number, default: 1, min: 0 },
+    loanedCopies: { type: Number, default: 0, min: 0 }
 });
 const Book = mongoose.model('Book', BookSchema);
 
@@ -36,38 +39,66 @@ const Loan = mongoose.model('Loan', LoanSchema);
 
 // --- ROUTES DE L'API ---
 
+// Route de test pour vérifier que le serveur fonctionne
+app.get('/api', (req, res) => {
+    res.json({ message: 'Bienvenue sur l\'API de la bibliothèque Alkawthar !' });
+});
+
 // Obtenir tous les livres
 app.get('/api/books', async (req, res) => {
-    const books = await Book.find();
-    res.json(books);
+    try {
+        const books = await Book.find().sort({ title: 1 });
+        res.json(books);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur lors de la récupération des livres.", error });
+    }
 });
 
 // Obtenir tous les prêts
 app.get('/api/loans', async (req, res) => {
-    const loans = await Loan.find();
-    res.json(loans);
+    try {
+        const loans = await Loan.find();
+        res.json(loans);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur lors de la récupération des prêts.", error });
+    }
 });
 
 // Importer des livres depuis Excel
 app.post('/api/books/import', async (req, res) => {
+    console.log('Requête d\'import reçue...');
     const booksToImport = req.body;
+    if (!booksToImport || !Array.isArray(booksToImport)) {
+        return res.status(400).json({ message: 'Aucune donnée à importer.' });
+    }
+
     let addedCount = 0;
     let updatedCount = 0;
 
-    for (const bookData of booksToImport) {
-        const existingBook = await Book.findOne({ isbn: bookData.isbn });
-        if (existingBook) {
-            existingBook.totalCopies += bookData.totalCopies;
-            await existingBook.save();
-            updatedCount++;
-        } else {
-            await Book.create(bookData);
-            addedCount++;
+    try {
+        for (const bookData of booksToImport) {
+            // S'assurer que les données essentielles sont présentes
+            if (!bookData.isbn || !bookData.title) continue;
+
+            const existingBook = await Book.findOne({ isbn: bookData.isbn });
+            if (existingBook) {
+                existingBook.totalCopies += isNaN(bookData.totalCopies) ? 0 : bookData.totalCopies;
+                await existingBook.save();
+                updatedCount++;
+            } else {
+                await Book.create(bookData);
+                addedCount++;
+            }
         }
+        console.log(`Importation terminée: ${addedCount} ajoutés, ${updatedCount} mis à jour.`);
+        res.status(201).json({ message: 'Importation réussie', added: addedCount, updated: updatedCount });
+    } catch (error) {
+        console.error("Erreur lors de l'importation:", error);
+        res.status(500).json({ message: "Une erreur s'est produite lors de l'importation.", error });
     }
-    res.json({ message: 'Importation réussie', added: addedCount, updated: updatedCount });
 });
 
+// ... (Les autres routes restent les mêmes que dans la version précédente)
 // Ajouter un livre manuellement
 app.post('/api/books', async (req, res) => {
     const bookData = req.body;
@@ -123,9 +154,8 @@ app.delete('/api/loans/:isbn/:studentName', async (req, res) => {
     res.json({ success: true });
 });
 
-
 // --- DÉMARRAGE DU SERVEUR ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Le serveur écoute sur le port ${PORT}`);
+    console.log(`🚀 Le serveur écoute sur le port ${PORT}`);
 });
