@@ -5,10 +5,9 @@ const cors = require('cors');
 
 const app = express();
 
-// --- MIDDLEWARES IMPORTANTS ---
-// Doivent être placés AVANT les routes
-app.use(cors()); // Active CORS pour toutes les requêtes
-app.use(express.json({ limit: '10mb' })); // Permet de recevoir des données JSON (avec une limite plus grande pour les fichiers Excel)
+// --- MIDDLEWARES ---
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
 
 // --- CONNEXION À MONGODB ---
 mongoose.connect(process.env.MONGODB_URI)
@@ -37,12 +36,18 @@ const LoanSchema = new mongoose.Schema({
 });
 const Loan = mongoose.model('Loan', LoanSchema);
 
-// --- ROUTES DE L'API ---
-
-// Route de test pour vérifier que le serveur fonctionne
-app.get('/api', (req, res) => {
-    res.json({ message: 'Bienvenue sur l\'API de la bibliothèque Alkawthar !' });
+// NOUVEAU : Schéma pour l'historique
+const HistorySchema = new mongoose.Schema({
+    isbn: { type: String, required: true },
+    title: { type: String, required: true }, // On stocke le titre pour ne pas le perdre
+    studentName: { type: String, required: true },
+    loanDate: String,
+    actualReturnDate: { type: Date, default: Date.now } // Date à laquelle le livre a été retourné
 });
+const History = mongoose.model('History', HistorySchema);
+
+
+// --- ROUTES DE L'API ---
 
 // Obtenir tous les livres
 app.get('/api/books', async (req, res) => {
@@ -66,7 +71,6 @@ app.get('/api/loans', async (req, res) => {
 
 // Importer des livres depuis Excel
 app.post('/api/books/import', async (req, res) => {
-    console.log('Requête d\'import reçue...');
     const booksToImport = req.body;
     if (!booksToImport || !Array.isArray(booksToImport)) {
         return res.status(400).json({ message: 'Aucune donnée à importer.' });
@@ -77,7 +81,6 @@ app.post('/api/books/import', async (req, res) => {
 
     try {
         for (const bookData of booksToImport) {
-            // S'assurer que les données essentielles sont présentes
             if (!bookData.isbn || !bookData.title) continue;
 
             const existingBook = await Book.findOne({ isbn: bookData.isbn });
@@ -90,7 +93,6 @@ app.post('/api/books/import', async (req, res) => {
                 addedCount++;
             }
         }
-        console.log(`Importation terminée: ${addedCount} ajoutés, ${updatedCount} mis à jour.`);
         res.status(201).json({ message: 'Importation réussie', added: addedCount, updated: updatedCount });
     } catch (error) {
         console.error("Erreur lors de l'importation:", error);
@@ -98,8 +100,74 @@ app.post('/api/books/import', async (req, res) => {
     }
 });
 
-// ... (Les autres routes restent les mêmes que dans la version précédente)
-// Ajouter un livre manuellement
+// Créer un prêt
+app.post('/api/loans', async (req, res) => {
+    const loanData = req.body;
+    try {
+        const book = await Book.findOne({ isbn: loanData.isbn });
+        if (book && book.loanedCopies < book.totalCopies) {
+            book.loanedCopies++;
+            await book.save();
+            const newLoan = await Loan.create(loanData);
+            res.status(201).json(newLoan);
+        } else {
+            res.status(400).json({ message: 'Livre non disponible pour le prêt.' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la création du prêt.", error });
+    }
+});
+
+// NOUVEAU : Retourner un livre (supprime le prêt et crée un enregistrement historique)
+app.post('/api/loans/return', async (req, res) => {
+    const { isbn, studentName } = req.body;
+
+    try {
+        // 1. Trouver et supprimer le prêt
+        const loan = await Loan.findOneAndDelete({ isbn, studentName });
+        
+        if (!loan) {
+            return res.status(404).json({ message: "Prêt non trouvé." });
+        }
+
+        // 2. Mettre à jour le nombre de copies du livre
+        const book = await Book.findOne({ isbn: loan.isbn });
+        if (book) {
+            if (book.loanedCopies > 0) {
+                book.loanedCopies--;
+            }
+            await book.save();
+
+            // 3. Créer un enregistrement dans l'historique
+            await History.create({
+                isbn: loan.isbn,
+                title: book.title, // On ajoute le titre du livre
+                studentName: loan.studentName,
+                loanDate: loan.loanDate,
+                // actualReturnDate est mis par défaut
+            });
+        }
+        
+        res.json({ success: true, message: "Livre retourné avec succès." });
+
+    } catch (error) {
+        console.error("Erreur lors du retour du livre:", error);
+        res.status(500).json({ message: "Une erreur s'est produite lors du retour du livre.", error });
+    }
+});
+
+// Les autres routes (DELETE book, PUT book, etc.) restent inchangées
+app.delete('/api/books/:isbn', async (req, res) => {
+    await Book.deleteOne({ isbn: req.params.isbn });
+    await Loan.deleteMany({ isbn: req.params.isbn });
+    res.json({ success: true });
+});
+
+app.put('/api/books/:isbn', async (req, res) => {
+    const updatedBook = await Book.findOneAndUpdate({ isbn: req.params.isbn }, req.body, { new: true });
+    res.json(updatedBook);
+});
+
 app.post('/api/books', async (req, res) => {
     const bookData = req.body;
     const existingBook = await Book.findOne({ isbn: bookData.isbn });
@@ -111,47 +179,6 @@ app.post('/api/books', async (req, res) => {
         const newBook = await Book.create(bookData);
         res.json(newBook);
     }
-});
-
-// Mettre à jour un livre
-app.put('/api/books/:isbn', async (req, res) => {
-    const updatedBook = await Book.findOneAndUpdate({ isbn: req.params.isbn }, req.body, { new: true });
-    res.json(updatedBook);
-});
-
-// Supprimer un livre
-app.delete('/api/books/:isbn', async (req, res) => {
-    await Book.deleteOne({ isbn: req.params.isbn });
-    await Loan.deleteMany({ isbn: req.params.isbn }); // Supprime aussi les prêts liés
-    res.json({ success: true });
-});
-
-// Créer un prêt
-app.post('/api/loans', async (req, res) => {
-    const loanData = req.body;
-    const book = await Book.findOne({ isbn: loanData.isbn });
-    if (book && book.loanedCopies < book.totalCopies) {
-        book.loanedCopies++;
-        await book.save();
-        const newLoan = await Loan.create(loanData);
-        res.json(newLoan);
-    } else {
-        res.status(400).json({ message: 'Livre non disponible pour le prêt.' });
-    }
-});
-
-// Supprimer un prêt (retourner un livre)
-app.delete('/api/loans/:isbn/:studentName', async (req, res) => {
-    const { isbn, studentName } = req.params;
-    const loan = await Loan.findOneAndDelete({ isbn, studentName });
-    if (loan) {
-        const book = await Book.findOne({ isbn });
-        if (book && book.loanedCopies > 0) {
-            book.loanedCopies--;
-            await book.save();
-        }
-    }
-    res.json({ success: true });
 });
 
 // --- DÉMARRAGE DU SERVEUR ---
