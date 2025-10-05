@@ -1,13 +1,16 @@
 {
-  "name": "alkawthar-library",
+  "name": "alkawthar-library-fullstack",
   "version": "1.0.0",
-  "description": "Système de gestion de la bibliothèque pour les écoles internationales Alkawthar.",
-  "main": "index.js",
+  "description": "Système de gestion de la bibliothèque pour les écoles Alkawthar.",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "serve"
+    "start": "node backend/server.js"
   },
   "dependencies": {
-    "serve": "^14.0.1"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0"
   },
   "author": "Alkawthar Schools",
   "license": "ISC"
