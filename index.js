@@ -1,34 +1,12 @@
-// Ce fichier est le FRONTEND, à la racine du projet
+// Fichier : /index.js - VERSION FRONTEND FINALE
 document.addEventListener('DOMContentLoaded', () => {
-    
     const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const API_URL = IS_LOCAL ? 'http://localhost:3000/api' : '/api';
     let allBooks = [];
     let allLoans = [];
-    const loginPage = document.getElementById('login-page');
-    const dashboardPage = document.getElementById('dashboard-page');
-    const loginForm = document.getElementById('login-form');
-    const loginError = document.getElementById('login-error');
-    const logoutBtn = document.getElementById('logout-btn');
-    const totalBooksStat = document.getElementById('total-books-stat');
-    const loanedBooksStat = document.getElementById('loaned-books-stat');
-    const availableBooksStat = document.getElementById('available-books-stat');
-    const booksTableBody = document.getElementById('books-table-body');
-    const searchInput = document.getElementById('search-input');
-    const addBookForm = document.getElementById('add-book-form');
-    const excelFileInput = document.getElementById('excel-file-input');
-    const uploadExcelBtn = document.getElementById('upload-excel-btn');
-    const uploadStatus = document.getElementById('upload-status');
-    const loanForm = document.getElementById('loan-form');
-    const loanIsbnInput = document.getElementById('loan-isbn');
-    const loanBookTitle = document.getElementById('loan-book-title');
-    const viewLoansBtn = document.getElementById('view-loans-btn');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const loansModal = document.getElementById('loans-modal');
-    const loansModalContent = document.getElementById('loans-modal-content');
-    const editModal = document.getElementById('edit-modal');
-    const editBookForm = document.getElementById('edit-book-form');
-    const loanSearchInput = document.getElementById('loan-search-input');
+
+    const loginPage = document.getElementById('login-page'), dashboardPage = document.getElementById('dashboard-page'), loginForm = document.getElementById('login-form'), loginError = document.getElementById('login-error'), logoutBtn = document.getElementById('logout-btn'), totalBooksStat = document.getElementById('total-books-stat'), loanedBooksStat = document.getElementById('loaned-books-stat'), availableBooksStat = document.getElementById('available-books-stat'), booksTableBody = document.getElementById('books-table-body'), searchInput = document.getElementById('search-input'), addBookForm = document.getElementById('add-book-form'), excelFileInput = document.getElementById('excel-file-input'), uploadExcelBtn = document.getElementById('upload-excel-btn'), uploadStatus = document.getElementById('upload-status'), loanForm = document.getElementById('loan-form'), loanIsbnInput = document.getElementById('loan-isbn'), loanBookTitle = document.getElementById('loan-book-title'), viewLoansBtn = document.getElementById('view-loans-btn'), modalOverlay = document.getElementById('modal-overlay'), loansModal = document.getElementById('loans-modal'), loansModalContent = document.getElementById('loans-modal-content'), editModal = document.getElementById('edit-modal'), editBookForm = document.getElementById('edit-book-form'), loanSearchInput = document.getElementById('loan-search-input');
+    
     const fetchData = async () => {
         try {
             const [booksRes, loansRes] = await Promise.all([ fetch(`${API_URL}/books`), fetch(`${API_URL}/loans`) ]);
@@ -42,83 +20,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     const updateStats = () => {
-        const totalCopies = allBooks.reduce((sum, book) => sum + book.totalCopies, 0);
-        const loanedCopies = allBooks.reduce((sum, book) => sum + book.loanedCopies, 0);
-        totalBooksStat.textContent = totalCopies;
-        loanedBooksStat.textContent = loanedCopies;
-        availableBooksStat.textContent = totalCopies - loanedCopies;
+        const totalCopies = allBooks.reduce((sum, book) => sum + book.totalCopies, 0); const loanedCopies = allBooks.reduce((sum, book) => sum + book.loanedCopies, 0); totalBooksStat.textContent = totalCopies; loanedBooksStat.textContent = loanedCopies; availableBooksStat.textContent = totalCopies - loanedCopies;
     };
     const renderTable = (bookList) => {
-        booksTableBody.innerHTML = '';
-        const currentLang = document.documentElement.lang;
-        const availabilityTexts = { ar: "متاح", fr: "disponible(s)", en: "available" };
-        const actionsTexts = { ar: { edit: "تعديل", delete: "حذف" }, fr: { edit: "Modifier", delete: "Supprimer" }, en: { edit: "Edit", delete: "Delete" } };
-        bookList.forEach(book => {
-            const availableCopies = book.totalCopies - book.loanedCopies;
-            const availabilityClass = availableCopies > 0 ? 'status-available' : 'status-unavailable';
-            const availabilityText = `${availableCopies} / ${book.totalCopies} ${availabilityTexts[currentLang]}`;
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>${book.isbn}</td><td>${book.title}</td><td>${book.cornerName || ''}</td><td>${book.cornerNumber || ''}</td><td><span class="${availabilityClass}">${availabilityText}</span></td><td class="actions-cell"><button class="btn-action btn-edit" title="${actionsTexts[currentLang].edit}"><i class="fas fa-edit"></i></button><button class="btn-action btn-delete" title="${actionsTexts[currentLang].delete}"><i class="fas fa-trash"></i></button></td>`;
-            row.querySelector('.btn-edit').addEventListener('click', () => openEditModal(book.isbn));
-            row.querySelector('.btn-delete').addEventListener('click', () => deleteBook(book.isbn, book.title));
-            booksTableBody.appendChild(row);
-        });
+        booksTableBody.innerHTML = ''; const currentLang = document.documentElement.lang; const availabilityTexts = { ar: "متاح", fr: "disponible(s)", en: "available" }; const actionsTexts = { ar: { edit: "تعديل", delete: "حذف" }, fr: { edit: "Modifier", delete: "Supprimer" }, en: { edit: "Edit", delete: "Delete" } };
+        bookList.forEach(book => { const availableCopies = book.totalCopies - book.loanedCopies; const availabilityClass = availableCopies > 0 ? 'status-available' : 'status-unavailable'; const availabilityText = `${availableCopies} / ${book.totalCopies} ${availabilityTexts[currentLang]}`; const row = document.createElement('tr'); row.innerHTML = `<td>${book.isbn}</td><td>${book.title}</td><td>${book.cornerName || ''}</td><td>${book.cornerNumber || ''}</td><td><span class="${availabilityClass}">${availabilityText}</span></td><td class="actions-cell"><button class="btn-action btn-edit" title="${actionsTexts[currentLang].edit}"><i class="fas fa-edit"></i></button><button class="btn-action btn-delete" title="${actionsTexts[currentLang].delete}"><i class="fas fa-trash"></i></button></td>`; row.querySelector('.btn-edit').addEventListener('click', () => openEditModal(book.isbn)); row.querySelector('.btn-delete').addEventListener('click', () => deleteBook(book.isbn, book.title)); booksTableBody.appendChild(row); });
     };
     const initializeDashboard = () => { updateStats(); renderTable(allBooks); };
     const displayLoans = (searchTerm = '') => {
-        const lowerCaseSearchTerm = searchTerm.toLowerCase();
-        const filteredLoans = allLoans.filter(loan => {
-            const book = allBooks.find(b => b.isbn === loan.isbn);
-            return loan.studentName.toLowerCase().includes(lowerCaseSearchTerm) || (book && book.title.toLowerCase().includes(lowerCaseSearchTerm)) || loan.isbn.includes(lowerCaseSearchTerm);
-        });
-        if (filteredLoans.length === 0) { loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`; return; }
-        const currentLang = document.documentElement.lang;
-        const headers = { ar: ["اسم الطالب", "عنوان الكتاب", "تاريخ الإعارة", "تاريخ التسليم", "إجراء"], fr: ["Nom", "Titre", "Date d'emprunt", "Date de retour", "Action"], en: ["Name", "Title", "Loan Date", "Return Date", "Action"] };
-        const returnText = { ar: "إرجاع", fr: "Retourner", en: "Return" };
-        let tableHTML = `<table id="loans-table"><thead><tr><th>${headers[currentLang][0]}</th><th>${headers[currentLang][1]}</th><th>${headers[currentLang][2]}</th><th>${headers[currentLang][3]}</th><th>${headers[currentLang][4]}</th></tr></thead><tbody>`;
-        filteredLoans.forEach(loan => {
-            const book = allBooks.find(b => b.isbn === loan.isbn);
-            tableHTML += `<tr><td>${loan.studentName}</td><td>${book ? book.title : 'Livre inconnu'}</td><td>${loan.loanDate}</td><td>${loan.returnDate}</td><td><button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}"><i class="fas fa-undo"></i> ${returnText[currentLang]}</button></td></tr>`;
-        });
-        tableHTML += `</tbody></table>`;
-        loansModalContent.innerHTML = tableHTML;
-        document.querySelectorAll('.btn-return').forEach(button => {
-            button.addEventListener('click', async (e) => {
-                const isbn = e.currentTarget.dataset.isbn;
-                const studentName = e.currentTarget.dataset.student;
-                await returnLoan(isbn, studentName);
-            });
-        });
+        const lowerCaseSearchTerm = searchTerm.toLowerCase(); const filteredLoans = allLoans.filter(loan => { const book = allBooks.find(b => b.isbn === loan.isbn); return loan.studentName.toLowerCase().includes(lowerCaseSearchTerm) || (book && book.title.toLowerCase().includes(lowerCaseSearchTerm)) || loan.isbn.includes(lowerCaseSearchTerm); }); if (filteredLoans.length === 0) { loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`; return; } const currentLang = document.documentElement.lang; const headers = { ar: ["اسم الطالب", "عنوان الكتاب", "تاريخ الإعارة", "تاريخ التسليم", "إجراء"], fr: ["Nom", "Titre", "Date d'emprunt", "Date de retour", "Action"], en: ["Name", "Title", "Loan Date", "Return Date", "Action"] }; const returnText = { ar: "إرجاع", fr: "Retourner", en: "Return" }; let tableHTML = `<table id="loans-table"><thead><tr><th>${headers[currentLang][0]}</th><th>${headers[currentLang][1]}</th><th>${headers[currentLang][2]}</th><th>${headers[currentLang][3]}</th><th>${headers[currentLang][4]}</th></tr></thead><tbody>`; filteredLoans.forEach(loan => { const book = allBooks.find(b => b.isbn === loan.isbn); tableHTML += `<tr><td>${loan.studentName}</td><td>${book ? book.title : 'Livre inconnu'}</td><td>${loan.loanDate}</td><td>${loan.returnDate}</td><td><button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}"><i class="fas fa-undo"></i> ${returnText[currentLang]}</button></td></tr>`; }); tableHTML += `</tbody></table>`; loansModalContent.innerHTML = tableHTML; document.querySelectorAll('.btn-return').forEach(button => { button.addEventListener('click', async (e) => { const isbn = e.currentTarget.dataset.isbn; const studentName = e.currentTarget.dataset.student; await returnLoan(isbn, studentName); }); });
     };
     const openModal = (modalElement) => { modalOverlay.style.display = 'flex'; modalElement.style.display = 'flex'; };
     const closeModal = () => { modalOverlay.style.display = 'none'; editModal.style.display = 'none'; loansModal.style.display = 'none'; };
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
     document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModal));
-    const openEditModal = (isbn) => {
-        const book = allBooks.find(b => b.isbn === isbn);
-        if (!book) return;
-        document.getElementById('edit-original-isbn').value = book.isbn;
-        document.getElementById('edit-title').value = book.title;
-        document.getElementById('edit-isbn').value = book.isbn;
-        document.getElementById('edit-quantity').value = book.totalCopies;
-        document.getElementById('edit-subject').value = book.subject || '';
-        document.getElementById('edit-level').value = book.level || '';
-        document.getElementById('edit-language').value = book.language || '';
-        document.getElementById('edit-corner-name').value = book.cornerName || '';
-        document.getElementById('edit-corner-number').value = book.cornerNumber || '';
-        openModal(editModal);
-    };
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
-            loginPage.style.display = 'none';
-            dashboardPage.style.display = 'block';
-            await fetchData();
-        } else {
-            loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
-        }
-    });
+    const openEditModal = (isbn) => { const book = allBooks.find(b => b.isbn === isbn); if (!book) return; document.getElementById('edit-original-isbn').value = book.isbn; document.getElementById('edit-title').value = book.title; document.getElementById('edit-isbn').value = book.isbn; document.getElementById('edit-quantity').value = book.totalCopies; document.getElementById('edit-subject').value = book.subject || ''; document.getElementById('edit-level').value = book.level || ''; document.getElementById('edit-language').value = book.language || ''; document.getElementById('edit-corner-name').value = book.cornerName || ''; document.getElementById('edit-corner-number').value = book.cornerNumber || ''; openModal(editModal); };
+    loginForm.addEventListener('submit', async (e) => { e.preventDefault(); if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') { loginPage.style.display = 'none'; dashboardPage.style.display = 'block'; await fetchData(); } else { loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة.'; } });
     logoutBtn.addEventListener('click', () => window.location.reload());
+    
     uploadExcelBtn.addEventListener('click', () => {
         if (excelFileInput.files.length === 0) { uploadStatus.textContent = 'الرجاء اختيار ملف.'; return; }
         const reader = new FileReader();
@@ -134,16 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch(`${API_URL}/books/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booksToImport) });
                 if (!res.ok) throw new Error(`Erreur du serveur: ${res.statusText}`);
                 const result = await res.json();
-                uploadStatus.textContent = `✅ تمت المعالجة: ${result.added} كتاب جديد، ${result.updated} كتاب محدث.`;
+                uploadStatus.textContent = `✅ ${result.message} Ajoutés: ${result.added}, Mis à jour: ${result.updated}, Doublons ignorés: ${result.duplicates}.`;
                 excelFileInput.value = '';
                 await fetchData();
             } catch (error) {
                 console.error("Erreur lors de l'import Excel :", error);
-                uploadStatus.textContent = "❌ خطأ في معالجة الملف.";
+                uploadStatus.textContent = "❌ خطأ في معالجة الملف. Vérifiez la console (F12).";
             }
         };
         reader.readAsArrayBuffer(excelFileInput.files[0]);
     });
+    
     const deleteBook = async (isbn, title) => { if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}"?`)) { await fetch(`${API_URL}/books/${isbn}`, { method: 'DELETE' }); await fetchData(); } };
     addBookForm.addEventListener('submit', async (e) => { e.preventDefault(); const bookData = { isbn: document.getElementById('new-isbn').value.trim(), title: document.getElementById('new-title').value, totalCopies: parseInt(document.getElementById('new-quantity').value, 10), subject: document.getElementById('new-subject').value, level: document.getElementById('new-level').value, language: document.getElementById('new-language').value, cornerName: document.getElementById('new-corner-name').value, cornerNumber: document.getElementById('new-corner-number').value }; await fetch(`${API_URL}/books`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) }); addBookForm.reset(); await fetchData(); });
     editBookForm.addEventListener('submit', async (e) => { e.preventDefault(); const originalIsbn = document.getElementById('edit-original-isbn').value; const bookToUpdate = allBooks.find(b => b.isbn === originalIsbn); if(!bookToUpdate) return; const updatedData = { title: document.getElementById('edit-title').value, isbn: document.getElementById('edit-isbn').value.trim(), totalCopies: parseInt(document.getElementById('edit-quantity').value, 10), subject: document.getElementById('edit-subject').value, level: document.getElementById('edit-level').value, language: document.getElementById('edit-language').value, cornerName: document.getElementById('edit-corner-name').value, cornerNumber: document.getElementById('edit-corner-number').value }; if (updatedData.totalCopies < bookToUpdate.loanedCopies) { alert('La quantité totale ne peut pas être inférieure au nombre de livres déjà prêtés.'); return; } await fetch(`${API_URL}/books/${originalIsbn}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) }); closeModal(); await fetchData(); });
