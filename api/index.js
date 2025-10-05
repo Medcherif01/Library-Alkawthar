@@ -3,21 +3,32 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-const app = express();
+// --- MESSAGE DE DÉBOGAGE AU DÉMARRAGE ---
+console.log("INITIALISATION DU SERVEUR API...");
 
-// --- MIDDLEWARES ---
-// Active CORS pour que votre site Vercel puisse parler à l'API
+const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// --- CONNEXION À MONGODB ---
-// Vercel utilisera les variables d'environnement que vous avez configurées sur le site
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ Connexion à MongoDB réussie.'))
-  .catch((err) => console.error('❌ Erreur de connexion à MongoDB:', err));
+// --- VÉRIFICATION DE LA VARIABLE D'ENVIRONNEMENT ---
+if (!process.env.MONGODB_URI) {
+    console.error("ERREUR FATALE: La variable d'environnement MONGODB_URI n'est pas définie.");
+    // On envoie une réponse d'erreur claire si la variable manque
+    app.use('/api/*', (req, res) => {
+        res.status(500).json({ 
+            error: "Erreur de configuration du serveur.",
+            message: "La chaîne de connexion à la base de données est manquante."
+        });
+    });
+} else {
+    console.log("Variable MONGODB_URI trouvée. Tentative de connexion...");
+    // --- CONNEXION À MONGODB ---
+    mongoose.connect(process.env.MONGODB_URI)
+      .then(() => console.log('✅ Connexion à MongoDB réussie.'))
+      .catch((err) => console.error('❌ Erreur de connexion à MongoDB:', err.message));
+}
 
 // --- MODÈLES DE DONNÉES (SCHEMAS) ---
-// Ce code ne change pas
 const BookSchema = new mongoose.Schema({
     isbn: { type: String, required: true, unique: true, trim: true },
     title: { type: String, required: true, trim: true },
@@ -26,7 +37,6 @@ const BookSchema = new mongoose.Schema({
     totalCopies: { type: Number, default: 1, min: 0 },
     loanedCopies: { type: Number, default: 0, min: 0 }
 });
-// Empêche Mongoose de recréer le modèle s'il existe déjà (important pour Vercel)
 const Book = mongoose.models.Book || mongoose.model('Book', BookSchema);
 
 const LoanSchema = new mongoose.Schema({
@@ -46,21 +56,20 @@ const HistorySchema = new mongoose.Schema({
 const History = mongoose.models.History || mongoose.model('History', HistorySchema);
 
 // --- ROUTES DE L'API ---
-// Tout ce code est identique à avant
-
-// Obtenir tous les livres
 app.get('/api/books', async (req, res) => {
-    const books = await Book.find().sort({ title: 1 });
-    res.json(books);
+    try {
+        const books = await Book.find().sort({ title: 1 });
+        res.json(books);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur lors de la récupération des livres." });
+    }
 });
 
-// Obtenir tous les prêts
+// ... (le reste des routes reste identique)
 app.get('/api/loans', async (req, res) => {
     const loans = await Loan.find();
     res.json(loans);
 });
-
-// Importer des livres
 app.post('/api/books/import', async (req, res) => {
     const booksToImport = req.body;
     let addedCount = 0, updatedCount = 0;
@@ -78,8 +87,6 @@ app.post('/api/books/import', async (req, res) => {
     }
     res.status(201).json({ message: 'Importation réussie', added: addedCount, updated: updatedCount });
 });
-
-// Créer un prêt
 app.post('/api/loans', async (req, res) => {
     const loanData = req.body;
     const book = await Book.findOne({ isbn: loanData.isbn });
@@ -92,8 +99,6 @@ app.post('/api/loans', async (req, res) => {
         res.status(400).json({ message: 'Livre non disponible.' });
     }
 });
-
-// Retourner un livre
 app.post('/api/loans/return', async (req, res) => {
     const { isbn, studentName } = req.body;
     const loan = await Loan.findOneAndDelete({ isbn, studentName });
@@ -106,21 +111,15 @@ app.post('/api/loans/return', async (req, res) => {
     }
     res.json({ success: true });
 });
-
-// Supprimer un livre
 app.delete('/api/books/:isbn', async (req, res) => {
     await Book.deleteOne({ isbn: req.params.isbn });
     await Loan.deleteMany({ isbn: req.params.isbn });
     res.json({ success: true });
 });
-
-// Mettre à jour un livre
 app.put('/api/books/:isbn', async (req, res) => {
     const updatedBook = await Book.findOneAndUpdate({ isbn: req.params.isbn }, req.body, { new: true });
     res.json(updatedBook);
 });
-
-// Ajouter un livre manuellement
 app.post('/api/books', async (req, res) => {
     const bookData = req.body;
     const existingBook = await Book.findOne({ isbn: bookData.isbn });
@@ -135,5 +134,4 @@ app.post('/api/books', async (req, res) => {
 });
 
 // --- EXPORTATION POUR VERCEL ---
-// LA PARTIE LA PLUS IMPORTANTE ! On remplace app.listen par ceci.
 module.exports = app;
