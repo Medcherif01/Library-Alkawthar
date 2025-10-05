@@ -46,12 +46,10 @@ app.post('/api/books/import', async (req, res) => {
                 addedCount++;
             }
         } catch (error) {
-            // Si c'est une erreur de doublon (code 11000), on l'ignore et on continue
             if (error.code === 11000) {
                 duplicateCount++;
                 console.log(`Doublon ignoré pour l'ISBN: ${bookData.isbn}`);
             } else {
-                // Pour les autres erreurs, on les logue mais on ne fait pas planter le serveur
                 console.error(`Erreur lors de l'import du livre ${bookData.title}:`, error.message);
             }
         }
