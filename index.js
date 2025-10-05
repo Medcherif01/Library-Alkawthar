@@ -3,7 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
     // CONFIGURATION & VARIABLES GLOBALES
     // ===================================
-    const API_URL = 'http://localhost:3000/api';
+    // Logique pour déterminer l'URL de l'API dynamiquement
+    const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_URL = IS_LOCAL ? 'http://localhost:3000/api' : '/api'; // Important: '/api' pour Vercel
+
     let allBooks = [];
     let allLoans = [];
 
@@ -44,13 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch(`${API_URL}/books`),
                 fetch(`${API_URL}/loans`)
             ]);
-            if (!booksRes.ok || !loansRes.ok) throw new Error('La réponse du serveur n\'est pas valide.');
+            if (!booksRes.ok || !loansRes.ok) throw new Error(`Réponse du serveur non valide: ${booksRes.status} ${loansRes.status}`);
             allBooks = await booksRes.json();
             allLoans = await loansRes.json();
             initializeDashboard();
         } catch (error) {
             console.error("❌ Erreur de chargement des données:", error);
-            alert("ERREUR : Impossible de charger les données. Vérifiez que le serveur backend est bien démarré.");
+            alert("ERREUR : Impossible de charger les données. Le serveur backend ne répond pas. Vérifiez la console (F12) pour plus de détails.");
         }
     };
 
@@ -75,17 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const availabilityClass = availableCopies > 0 ? 'status-available' : 'status-unavailable';
             const availabilityText = `${availableCopies} / ${book.totalCopies} ${availabilityTexts[currentLang]}`;
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${book.isbn}</td>
-                <td>${book.title}</td>
-                <td>${book.cornerName || ''}</td>
-                <td>${book.cornerNumber || ''}</td>
-                <td><span class="${availabilityClass}">${availabilityText}</span></td>
-                <td class="actions-cell">
-                    <button class="btn-action btn-edit" title="${actionsTexts[currentLang].edit}"><i class="fas fa-edit"></i></button>
-                    <button class="btn-action btn-delete" title="${actionsTexts[currentLang].delete}"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
+            row.innerHTML = `<td>${book.isbn}</td><td>${book.title}</td><td>${book.cornerName || ''}</td><td>${book.cornerNumber || ''}</td><td><span class="${availabilityClass}">${availabilityText}</span></td><td class="actions-cell"><button class="btn-action btn-edit" title="${actionsTexts[currentLang].edit}"><i class="fas fa-edit"></i></button><button class="btn-action btn-delete" title="${actionsTexts[currentLang].delete}"><i class="fas fa-trash"></i></button></td>`;
             row.querySelector('.btn-edit').addEventListener('click', () => openEditModal(book.isbn));
             row.querySelector('.btn-delete').addEventListener('click', () => deleteBook(book.isbn, book.title));
             booksTableBody.appendChild(row);
@@ -101,34 +94,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
         const filteredLoans = allLoans.filter(loan => {
             const book = allBooks.find(b => b.isbn === loan.isbn);
-            return loan.studentName.toLowerCase().includes(lowerCaseSearchTerm) ||
-                   (book && book.title.toLowerCase().includes(lowerCaseSearchTerm)) ||
-                   loan.isbn.includes(lowerCaseSearchTerm);
+            return loan.studentName.toLowerCase().includes(lowerCaseSearchTerm) || (book && book.title.toLowerCase().includes(lowerCaseSearchTerm)) || loan.isbn.includes(lowerCaseSearchTerm);
         });
-        
         if (filteredLoans.length === 0) {
-            loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`;
-            return;
+            loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`; return;
         }
-
         const currentLang = document.documentElement.lang;
         const headers = { ar: ["اسم الطالب", "عنوان الكتاب", "تاريخ الإعارة", "تاريخ التسليم", "إجراء"], fr: ["Nom", "Titre", "Date d'emprunt", "Date de retour", "Action"], en: ["Name", "Title", "Loan Date", "Return Date", "Action"] };
         const returnText = { ar: "إرجاع", fr: "Retourner", en: "Return" };
-        
         let tableHTML = `<table id="loans-table"><thead><tr><th>${headers[currentLang][0]}</th><th>${headers[currentLang][1]}</th><th>${headers[currentLang][2]}</th><th>${headers[currentLang][3]}</th><th>${headers[currentLang][4]}</th></tr></thead><tbody>`;
         filteredLoans.forEach(loan => {
             const book = allBooks.find(b => b.isbn === loan.isbn);
-            tableHTML += `<tr>
-                <td>${loan.studentName}</td>
-                <td>${book ? book.title : 'Livre inconnu'}</td>
-                <td>${loan.loanDate}</td>
-                <td>${loan.returnDate}</td>
-                <td><button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}"><i class="fas fa-undo"></i> ${returnText[currentLang]}</button></td>
-            </tr>`;
+            tableHTML += `<tr><td>${loan.studentName}</td><td>${book ? book.title : 'Livre inconnu'}</td><td>${loan.loanDate}</td><td>${loan.returnDate}</td><td><button class="btn-action btn-return" data-isbn="${loan.isbn}" data-student="${loan.studentName}"><i class="fas fa-undo"></i> ${returnText[currentLang]}</button></td></tr>`;
         });
         tableHTML += `</tbody></table>`;
         loansModalContent.innerHTML = tableHTML;
-        
         document.querySelectorAll('.btn-return').forEach(button => {
             button.addEventListener('click', async (e) => {
                 const isbn = e.currentTarget.dataset.isbn;
@@ -178,8 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     uploadExcelBtn.addEventListener('click', () => {
         if (excelFileInput.files.length === 0) {
-            uploadStatus.textContent = 'الرجاء اختيار ملف.';
-            return;
+            uploadStatus.textContent = 'الرجاء اختيار ملف.'; return;
         }
         const reader = new FileReader();
         reader.onload = async (event) => {
@@ -189,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const workbook = XLSX.read(data, { type: 'array' });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const json = XLSX.utils.sheet_to_json(worksheet);
-                
                 const booksToImport = json.map(row => ({
                     title: row['Title'],
                     isbn: row['ISBN'] ? String(row['ISBN']).trim() : null,
@@ -200,17 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     cornerName: row['Corner name'] || '',
                     cornerNumber: row['Corner number'] ? String(row['Corner number']) : '',
                 })).filter(b => b.isbn && b.title);
-
                 if (booksToImport.length === 0) {
-                    uploadStatus.textContent = 'لم يتم العثور على كتب صالحة في الملف.';
-                    return;
+                    uploadStatus.textContent = 'لم يتم العثور على كتب صالحة في الملف.'; return;
                 }
-                
-                const res = await fetch(`${API_URL}/books/import`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(booksToImport)
-                });
+                const res = await fetch(`${API_URL}/books/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booksToImport) });
                 if (!res.ok) throw new Error(`Erreur du serveur: ${res.statusText}`);
                 const result = await res.json();
                 uploadStatus.textContent = `✅ تمت المعالجة: ${result.added} كتاب جديد، ${result.updated} كتاب محدث.`;
@@ -252,52 +223,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     const returnLoan = async (isbn, studentName) => {
-        await fetch(`${API_URL}/loans/return`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ isbn, studentName })
-        });
+        await fetch(`${API_URL}/loans/return`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isbn, studentName }) });
         await fetchData();
-        // Rafraîchir la vue de la modale si elle est ouverte
-        if (loansModal.style.display === 'flex') {
-            displayLoans(loanSearchInput.value);
-        }
+        if (loansModal.style.display === 'flex') { displayLoans(loanSearchInput.value); }
     };
 
     loanForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const loanData = { isbn: loanIsbnInput.value.trim(), studentName: document.getElementById('student-name').value, loanDate: document.getElementById('loan-date').value, returnDate: document.getElementById('return-date').value };
         const response = await fetch(`${API_URL}/loans`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loanData) });
-        if (response.ok) {
-            loanForm.reset();
-            loanBookTitle.textContent = '-';
-            await fetchData();
-            alert('تمت إعارة الكتاب بنجاح!');
-        } else {
-            alert('لا يمكن إعارة هذا الكتاب. جميع النسخ معارة بالفعل.');
-        }
+        if (response.ok) { loanForm.reset(); loanBookTitle.textContent = '-'; await fetchData(); alert('تمت إعارة الكتاب بنجاح!'); } else { alert('لا يمكن إعارة هذا الكتاب. جميع النسخ معارة بالفعل.'); }
     });
 
-    loanIsbnInput.addEventListener('input', (e) => {
-        const book = allBooks.find(b => b.isbn === e.target.value.trim());
-        loanBookTitle.textContent = book ? book.title : '-';
-    });
-
-    viewLoansBtn.addEventListener('click', () => {
-        displayLoans();
-        openModal(loansModal);
-        loanSearchInput.value = '';
-        loanSearchInput.focus();
-    });
-
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        renderTable(allBooks.filter(b => b.title.toLowerCase().includes(searchTerm) || b.isbn.includes(searchTerm)));
-    });
-    
+    loanIsbnInput.addEventListener('input', (e) => { const book = allBooks.find(b => b.isbn === e.target.value.trim()); loanBookTitle.textContent = book ? book.title : '-'; });
+    viewLoansBtn.addEventListener('click', () => { displayLoans(); openModal(loansModal); loanSearchInput.value = ''; loanSearchInput.focus(); });
+    searchInput.addEventListener('input', (e) => { const searchTerm = e.target.value.toLowerCase(); renderTable(allBooks.filter(b => b.title.toLowerCase().includes(searchTerm) || b.isbn.includes(searchTerm))); });
     loanSearchInput.addEventListener('input', (e) => displayLoans(e.target.value));
 
-    // --- Traduction (inchangée) ---
+    // --- Traduction ---
     const translations = { ar: { title: "مكتبة الكوثر", welcome_title: "مرحباً بكم في مكتبة مدارس الكوثر العالمية", welcome_subtitle: "الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.", username_label: "اسم المستخدم", password_label: "كلمة المرور", login_btn: "تسجيل الدخول", dashboard_title: "لوحة تحكم مكتبة الكوثر", school_name: "مدارس الكوثر العالمية", logout_btn_title: "تسجيل الخروج", stats_title: "إحصائيات المكتبة", total_books: "إجمالي الكتب", loaned_books: "الكتب المعارة", available_books: "الكتب المتاحة", scanner_title: "بحث سريع بالباركود", scanner_label: "امسح ISBN الكتاب هنا:", scanner_placeholder: "امسح الباركود...", scanner_instruction: "الرجاء مسح كتاب ضوئياً لعرض معلوماته.", excel_upload_title: "إضافة عبر ملف Excel", excel_instruction: "اختر ملف (.xlsx) بالأعمدة: Title, ISBN, QTY, Subject, level, language, Corner name, Corner number", choose_file_btn: "اختر ملف...", upload_btn: "رفع الملف", search_book_title: "البحث في المخزون", search_placeholder: "ابحث بالعنوان أو ISBN...", isbn_col: "ISBN", title_col: "العنوان", corner_name_col: "اسم الركن", corner_num_col: "رقم الركن", availability_col: "الإتاحة", actions_col: "الإجراءات", add_book_title: "تسجيل كتاب جديد يدوياً", book_title_label: "عنوان الكتاب", save_book_btn: "حفظ الكتاب", manage_loan_title: "إدارة الإعارة", student_name_label: "اسم الطالب", loan_book_btn: "إعارة الكتاب", corner_name_label: "اسم الركن", corner_num_label: "رقم الركن", quantity_label: "الكمية", subject_label: "المادة", level_label: "المستوى", language_label: "اللغة", loan_date_label: "تاريخ الإعارة", return_date_label: "تاريخ التسليم", footer_text: "© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة.", view_loans_btn: "عرض الطلاب المستعيرين", loaned_books_list_title: "قائمة الكتب المعارة", edit_book_title: "تعديل معلومات الكتاب", save_changes_btn: "حفظ التغييرات", loan_search_placeholder: "ابحث بالاسم، العنوان، أو امسح ISBN...", return_action: "إرجاع" }, fr: { /* ... */ }, en: { /* ... */ } };
     const switchLanguage = (lang) => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; document.querySelectorAll('[data-lang-key]').forEach(el => { const key = el.getAttribute('data-lang-key'); if (translations[lang] && translations[lang][key]) { el.textContent = translations[lang][key]; } }); document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => { const key = el.getAttribute('data-lang-key-placeholder'); if (translations[lang] && translations[lang][key]) { el.placeholder = translations[lang][key]; } }); if (dashboardPage.style.display === 'block') { renderTable(allBooks); } };
     document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', (e) => switchLanguage(e.target.getAttribute('data-lang'))));
