@@ -1,18 +1,10 @@
+// Ce fichier est le FRONTEND, à la racine du projet
 document.addEventListener('DOMContentLoaded', () => {
     
-    // ===================================
-    // CONFIGURATION & VARIABLES GLOBALES
-    // ===================================
-    // Logique pour déterminer l'URL de l'API dynamiquement
     const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const API_URL = IS_LOCAL ? 'http://localhost:3000/api' : '/api'; // Important: '/api' pour Vercel
-
+    const API_URL = IS_LOCAL ? 'http://localhost:3000/api' : '/api';
     let allBooks = [];
     let allLoans = [];
-
-    // ===================================
-    // SÉLECTION DES ÉLÉMENTS DU DOM
-    // ===================================
     const loginPage = document.getElementById('login-page');
     const dashboardPage = document.getElementById('dashboard-page');
     const loginForm = document.getElementById('login-form');
@@ -37,17 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const editModal = document.getElementById('edit-modal');
     const editBookForm = document.getElementById('edit-book-form');
     const loanSearchInput = document.getElementById('loan-search-input');
-    
-    // ===================================
-    // FONCTIONS DE COMMUNICATION API
-    // ===================================
     const fetchData = async () => {
         try {
-            const [booksRes, loansRes] = await Promise.all([
-                fetch(`${API_URL}/books`),
-                fetch(`${API_URL}/loans`)
-            ]);
-            if (!booksRes.ok || !loansRes.ok) throw new Error(`Réponse du serveur non valide: ${booksRes.status} ${loansRes.status}`);
+            const [booksRes, loansRes] = await Promise.all([ fetch(`${API_URL}/books`), fetch(`${API_URL}/loans`) ]);
+            if (!booksRes.ok || !loansRes.ok) throw new Error(`Réponse du serveur non valide`);
             allBooks = await booksRes.json();
             allLoans = await loansRes.json();
             initializeDashboard();
@@ -56,10 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("ERREUR : Impossible de charger les données. Le serveur backend ne répond pas. Vérifiez la console (F12) pour plus de détails.");
         }
     };
-
-    // ===================================
-    // FONCTIONS D'AFFICHAGE
-    // ===================================
     const updateStats = () => {
         const totalCopies = allBooks.reduce((sum, book) => sum + book.totalCopies, 0);
         const loanedCopies = allBooks.reduce((sum, book) => sum + book.loanedCopies, 0);
@@ -67,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loanedBooksStat.textContent = loanedCopies;
         availableBooksStat.textContent = totalCopies - loanedCopies;
     };
-
     const renderTable = (bookList) => {
         booksTableBody.innerHTML = '';
         const currentLang = document.documentElement.lang;
@@ -84,21 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
             booksTableBody.appendChild(row);
         });
     };
-
-    const initializeDashboard = () => {
-        updateStats();
-        renderTable(allBooks);
-    };
-
+    const initializeDashboard = () => { updateStats(); renderTable(allBooks); };
     const displayLoans = (searchTerm = '') => {
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
         const filteredLoans = allLoans.filter(loan => {
             const book = allBooks.find(b => b.isbn === loan.isbn);
             return loan.studentName.toLowerCase().includes(lowerCaseSearchTerm) || (book && book.title.toLowerCase().includes(lowerCaseSearchTerm)) || loan.isbn.includes(lowerCaseSearchTerm);
         });
-        if (filteredLoans.length === 0) {
-            loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`; return;
-        }
+        if (filteredLoans.length === 0) { loansModalContent.innerHTML = `<p style="text-align: center; padding: 1rem;">لا توجد نتائج مطابقة.</p>`; return; }
         const currentLang = document.documentElement.lang;
         const headers = { ar: ["اسم الطالب", "عنوان الكتاب", "تاريخ الإعارة", "تاريخ التسليم", "إجراء"], fr: ["Nom", "Titre", "Date d'emprunt", "Date de retour", "Action"], en: ["Name", "Title", "Loan Date", "Return Date", "Action"] };
         const returnText = { ar: "إرجاع", fr: "Retourner", en: "Return" };
@@ -117,10 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     };
-
-    // ===================================
-    // GESTION DES MODALES
-    // ===================================
     const openModal = (modalElement) => { modalOverlay.style.display = 'flex'; modalElement.style.display = 'flex'; };
     const closeModal = () => { modalOverlay.style.display = 'none'; editModal.style.display = 'none'; loansModal.style.display = 'none'; };
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
@@ -139,10 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-corner-number').value = book.cornerNumber || '';
         openModal(editModal);
     };
-
-    // ===================================
-    // ACTIONS UTILISATEUR
-    // ===================================
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (document.getElementById('username').value === 'Alkawthar@30' && document.getElementById('password').value === 'Alkawthar@30') {
@@ -153,13 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
             loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
         }
     });
-
     logoutBtn.addEventListener('click', () => window.location.reload());
-    
     uploadExcelBtn.addEventListener('click', () => {
-        if (excelFileInput.files.length === 0) {
-            uploadStatus.textContent = 'الرجاء اختيار ملف.'; return;
-        }
+        if (excelFileInput.files.length === 0) { uploadStatus.textContent = 'الرجاء اختيار ملف.'; return; }
         const reader = new FileReader();
         reader.onload = async (event) => {
             try {
@@ -168,19 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const workbook = XLSX.read(data, { type: 'array' });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const json = XLSX.utils.sheet_to_json(worksheet);
-                const booksToImport = json.map(row => ({
-                    title: row['Title'],
-                    isbn: row['ISBN'] ? String(row['ISBN']).trim() : null,
-                    totalCopies: parseInt(row['QTY'], 10) || 1,
-                    subject: row['Subject'] || '',
-                    level: row['level'] || '',
-                    language: row['language'] || '',
-                    cornerName: row['Corner name'] || '',
-                    cornerNumber: row['Corner number'] ? String(row['Corner number']) : '',
-                })).filter(b => b.isbn && b.title);
-                if (booksToImport.length === 0) {
-                    uploadStatus.textContent = 'لم يتم العثور على كتب صالحة في الملف.'; return;
-                }
+                const booksToImport = json.map(row => ({ title: row['Title'], isbn: row['ISBN'] ? String(row['ISBN']).trim() : null, totalCopies: parseInt(row['QTY'], 10) || 1, subject: row['Subject'] || '', level: row['level'] || '', language: row['language'] || '', cornerName: row['Corner name'] || '', cornerNumber: row['Corner number'] ? String(row['Corner number']) : '' })).filter(b => b.isbn && b.title);
+                if (booksToImport.length === 0) { uploadStatus.textContent = 'لم يتم العثور على كتب صالحة في الملف.'; return; }
                 const res = await fetch(`${API_URL}/books/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booksToImport) });
                 if (!res.ok) throw new Error(`Erreur du serveur: ${res.statusText}`);
                 const result = await res.json();
@@ -194,53 +144,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsArrayBuffer(excelFileInput.files[0]);
     });
-
-    const deleteBook = async (isbn, title) => {
-        if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}"?`)) {
-            await fetch(`${API_URL}/books/${isbn}`, { method: 'DELETE' });
-            await fetchData();
-        }
-    };
-    
-    addBookForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const bookData = { isbn: document.getElementById('new-isbn').value.trim(), title: document.getElementById('new-title').value, totalCopies: parseInt(document.getElementById('new-quantity').value, 10), subject: document.getElementById('new-subject').value, level: document.getElementById('new-level').value, language: document.getElementById('new-language').value, cornerName: document.getElementById('new-corner-name').value, cornerNumber: document.getElementById('new-corner-number').value };
-        await fetch(`${API_URL}/books`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) });
-        addBookForm.reset();
-        await fetchData();
-    });
-
-    editBookForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const originalIsbn = document.getElementById('edit-original-isbn').value;
-        const bookToUpdate = allBooks.find(b => b.isbn === originalIsbn);
-        if(!bookToUpdate) return;
-        const updatedData = { title: document.getElementById('edit-title').value, isbn: document.getElementById('edit-isbn').value.trim(), totalCopies: parseInt(document.getElementById('edit-quantity').value, 10), subject: document.getElementById('edit-subject').value, level: document.getElementById('edit-level').value, language: document.getElementById('edit-language').value, cornerName: document.getElementById('edit-corner-name').value, cornerNumber: document.getElementById('edit-corner-number').value };
-        if (updatedData.totalCopies < bookToUpdate.loanedCopies) { alert('La quantité totale ne peut pas être inférieure au nombre de livres déjà prêtés.'); return; }
-        await fetch(`${API_URL}/books/${originalIsbn}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) });
-        closeModal();
-        await fetchData();
-    });
-    
-    const returnLoan = async (isbn, studentName) => {
-        await fetch(`${API_URL}/loans/return`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isbn, studentName }) });
-        await fetchData();
-        if (loansModal.style.display === 'flex') { displayLoans(loanSearchInput.value); }
-    };
-
-    loanForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const loanData = { isbn: loanIsbnInput.value.trim(), studentName: document.getElementById('student-name').value, loanDate: document.getElementById('loan-date').value, returnDate: document.getElementById('return-date').value };
-        const response = await fetch(`${API_URL}/loans`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loanData) });
-        if (response.ok) { loanForm.reset(); loanBookTitle.textContent = '-'; await fetchData(); alert('تمت إعارة الكتاب بنجاح!'); } else { alert('لا يمكن إعارة هذا الكتاب. جميع النسخ معارة بالفعل.'); }
-    });
-
+    const deleteBook = async (isbn, title) => { if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}"?`)) { await fetch(`${API_URL}/books/${isbn}`, { method: 'DELETE' }); await fetchData(); } };
+    addBookForm.addEventListener('submit', async (e) => { e.preventDefault(); const bookData = { isbn: document.getElementById('new-isbn').value.trim(), title: document.getElementById('new-title').value, totalCopies: parseInt(document.getElementById('new-quantity').value, 10), subject: document.getElementById('new-subject').value, level: document.getElementById('new-level').value, language: document.getElementById('new-language').value, cornerName: document.getElementById('new-corner-name').value, cornerNumber: document.getElementById('new-corner-number').value }; await fetch(`${API_URL}/books`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) }); addBookForm.reset(); await fetchData(); });
+    editBookForm.addEventListener('submit', async (e) => { e.preventDefault(); const originalIsbn = document.getElementById('edit-original-isbn').value; const bookToUpdate = allBooks.find(b => b.isbn === originalIsbn); if(!bookToUpdate) return; const updatedData = { title: document.getElementById('edit-title').value, isbn: document.getElementById('edit-isbn').value.trim(), totalCopies: parseInt(document.getElementById('edit-quantity').value, 10), subject: document.getElementById('edit-subject').value, level: document.getElementById('edit-level').value, language: document.getElementById('edit-language').value, cornerName: document.getElementById('edit-corner-name').value, cornerNumber: document.getElementById('edit-corner-number').value }; if (updatedData.totalCopies < bookToUpdate.loanedCopies) { alert('La quantité totale ne peut pas être inférieure au nombre de livres déjà prêtés.'); return; } await fetch(`${API_URL}/books/${originalIsbn}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) }); closeModal(); await fetchData(); });
+    const returnLoan = async (isbn, studentName) => { await fetch(`${API_URL}/loans/return`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isbn, studentName }) }); await fetchData(); if (loansModal.style.display === 'flex') { displayLoans(loanSearchInput.value); } };
+    loanForm.addEventListener('submit', async (e) => { e.preventDefault(); const loanData = { isbn: loanIsbnInput.value.trim(), studentName: document.getElementById('student-name').value, loanDate: document.getElementById('loan-date').value, returnDate: document.getElementById('return-date').value }; const response = await fetch(`${API_URL}/loans`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loanData) }); if (response.ok) { loanForm.reset(); loanBookTitle.textContent = '-'; await fetchData(); alert('تمت إعارة الكتاب بنجاح!'); } else { alert('لا يمكن إعارة هذا الكتاب. جميع النسخ معارة بالفعل.'); } });
     loanIsbnInput.addEventListener('input', (e) => { const book = allBooks.find(b => b.isbn === e.target.value.trim()); loanBookTitle.textContent = book ? book.title : '-'; });
     viewLoansBtn.addEventListener('click', () => { displayLoans(); openModal(loansModal); loanSearchInput.value = ''; loanSearchInput.focus(); });
     searchInput.addEventListener('input', (e) => { const searchTerm = e.target.value.toLowerCase(); renderTable(allBooks.filter(b => b.title.toLowerCase().includes(searchTerm) || b.isbn.includes(searchTerm))); });
     loanSearchInput.addEventListener('input', (e) => displayLoans(e.target.value));
-
-    // --- Traduction ---
     const translations = { ar: { title: "مكتبة الكوثر", welcome_title: "مرحباً بكم في مكتبة مدارس الكوثر العالمية", welcome_subtitle: "الرجاء إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.", username_label: "اسم المستخدم", password_label: "كلمة المرور", login_btn: "تسجيل الدخول", dashboard_title: "لوحة تحكم مكتبة الكوثر", school_name: "مدارس الكوثر العالمية", logout_btn_title: "تسجيل الخروج", stats_title: "إحصائيات المكتبة", total_books: "إجمالي الكتب", loaned_books: "الكتب المعارة", available_books: "الكتب المتاحة", scanner_title: "بحث سريع بالباركود", scanner_label: "امسح ISBN الكتاب هنا:", scanner_placeholder: "امسح الباركود...", scanner_instruction: "الرجاء مسح كتاب ضوئياً لعرض معلوماته.", excel_upload_title: "إضافة عبر ملف Excel", excel_instruction: "اختر ملف (.xlsx) بالأعمدة: Title, ISBN, QTY, Subject, level, language, Corner name, Corner number", choose_file_btn: "اختر ملف...", upload_btn: "رفع الملف", search_book_title: "البحث في المخزون", search_placeholder: "ابحث بالعنوان أو ISBN...", isbn_col: "ISBN", title_col: "العنوان", corner_name_col: "اسم الركن", corner_num_col: "رقم الركن", availability_col: "الإتاحة", actions_col: "الإجراءات", add_book_title: "تسجيل كتاب جديد يدوياً", book_title_label: "عنوان الكتاب", save_book_btn: "حفظ الكتاب", manage_loan_title: "إدارة الإعارة", student_name_label: "اسم الطالب", loan_book_btn: "إعارة الكتاب", corner_name_label: "اسم الركن", corner_num_label: "رقم الركن", quantity_label: "الكمية", subject_label: "المادة", level_label: "المستوى", language_label: "اللغة", loan_date_label: "تاريخ الإعارة", return_date_label: "تاريخ التسليم", footer_text: "© 2025 مدارس الكوثر العالمية - جميع الحقوق محفوظة.", view_loans_btn: "عرض الطلاب المستعيرين", loaned_books_list_title: "قائمة الكتب المعارة", edit_book_title: "تعديل معلومات الكتاب", save_changes_btn: "حفظ التغييرات", loan_search_placeholder: "ابحث بالاسم، العنوان، أو امسح ISBN...", return_action: "إرجاع" }, fr: { /* ... */ }, en: { /* ... */ } };
     const switchLanguage = (lang) => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; document.querySelectorAll('[data-lang-key]').forEach(el => { const key = el.getAttribute('data-lang-key'); if (translations[lang] && translations[lang][key]) { el.textContent = translations[lang][key]; } }); document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => { const key = el.getAttribute('data-lang-key-placeholder'); if (translations[lang] && translations[lang][key]) { el.placeholder = translations[lang][key]; } }); if (dashboardPage.style.display === 'block') { renderTable(allBooks); } };
     document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', (e) => switchLanguage(e.target.getAttribute('data-lang'))));
