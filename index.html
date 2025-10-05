@@ -10,9 +10,6 @@
 </head>
 <body>
 
-    <!-- =======================
-         PAGE DE CONNEXION
-    ======================== -->
     <div id="login-page">
          <div class="language-switcher standalone">
             <button class="lang-btn" data-lang="ar">العربية</button>
@@ -38,9 +35,6 @@
         </div>
     </div>
 
-    <!-- =======================
-         TABLEAU DE BORD
-    ======================== -->
     <div id="dashboard-page" style="display:none;">
         <header>
             <div class="logo-header">
@@ -65,7 +59,6 @@
         </header>
 
         <main class="container">
-            <!-- Le reste du HTML est identique à votre version précédente -->
             <section class="card stats-card animated">
                  <h2 data-lang-key="stats_title"><i class="fas fa-chart-pie"></i> إحصائيات المكتبة</h2>
                 <div class="stats-container">
@@ -137,7 +130,7 @@
                 </section>
 
                 <section class="card animated">
-                    <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة والعودة</h2>
+                    <h2 data-lang-key="manage_loan_title"><i class="fas fa-hand-holding-heart"></i> إدارة الإعارة</h2>
                     <form id="loan-form">
                         <div class="form-group"><label for="loan-isbn">ISBN الكتاب</label><input type="text" id="loan-isbn" required></div>
                         <div class="form-group auto-filled"><label data-lang-key="book_title_label">عنوان الكتاب</label><p id="loan-book-title">-</p></div>
@@ -146,7 +139,6 @@
                         <div class="form-group"><label for="loan-date" data-lang-key="loan_date_label">تاريخ الإعارة</label><input type="date" id="loan-date" required></div>
                         <div class="form-group"><label for="return-date" data-lang-key="return_date_label">تاريخ التسليم</label><input type="date" id="return-date" required></div>
                         <button type="submit" class="btn" data-lang-key="loan_book_btn">إعارة الكتاب</button>
-                        <button type="button" id="return-btn" class="btn btn-secondary" data-lang-key="return_book_btn">إرجاع الكتاب</button>
                     </form>
                 </section>
             </div>
@@ -165,7 +157,6 @@
             </div>
             <div id="loans-modal-content" class="table-container"></div>
         </div>
-
         <div id="edit-modal" class="modal">
             <button class="close-modal-btn">&times;</button>
             <h2 data-lang-key="edit_book_title">تعديل معلومات الكتاب</h2>
