@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch(`${API_URL}/books/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booksToImport) });
                 if (!res.ok) throw new Error(`Erreur du serveur: ${res.statusText}`);
                 const result = await res.json();
-                uploadStatus.textContent = `✅ ${result.message} Ajoutés: ${result.added}, Mis à jour: ${result.updated}, Doublons ignorés: ${result.duplicates}.`;
+                uploadStatus.textContent = `✅ ${result.message} Nouveaux ajoutés: ${result.added}, Déjà existants (ignorés): ${result.skipped}, Erreurs: ${result.errors}.`;
                 excelFileInput.value = '';
                 await fetchData();
             } catch (error) {
@@ -65,7 +65,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     const deleteBook = async (isbn, title) => { if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}"?`)) { await fetch(`${API_URL}/books/${isbn}`, { method: 'DELETE' }); await fetchData(); } };
-    addBookForm.addEventListener('submit', async (e) => { e.preventDefault(); const bookData = { isbn: document.getElementById('new-isbn').value.trim(), title: document.getElementById('new-title').value, totalCopies: parseInt(document.getElementById('new-quantity').value, 10), subject: document.getElementById('new-subject').value, level: document.getElementById('new-level').value, language: document.getElementById('new-language').value, cornerName: document.getElementById('new-corner-name').value, cornerNumber: document.getElementById('new-corner-number').value }; await fetch(`${API_URL}/books`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) }); addBookForm.reset(); await fetchData(); });
+    addBookForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bookData = {
+            isbn: document.getElementById('new-isbn').value.trim(),
+            title: document.getElementById('new-title').value,
+            totalCopies: parseInt(document.getElementById('new-quantity').value, 10),
+            subject: document.getElementById('new-subject').value,
+            level: document.getElementById('new-level').value,
+            language: document.getElementById('new-language').value,
+            cornerName: document.getElementById('new-corner-name').value,
+            cornerNumber: document.getElementById('new-corner-number').value
+        };
+        const response = await fetch(`${API_URL}/books`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookData) });
+        if (response.status === 409) {
+            const err = await response.json();
+            alert('⚠️ ' + err.message);
+            return;
+        }
+        if (!response.ok) {
+            alert('❌ Erreur lors de l\'enregistrement du livre.');
+            return;
+        }
+        addBookForm.reset();
+        await fetchData();
+        alert('✅ Livre ajouté avec succès !');
+    });
     editBookForm.addEventListener('submit', async (e) => { e.preventDefault(); const originalIsbn = document.getElementById('edit-original-isbn').value; const bookToUpdate = allBooks.find(b => b.isbn === originalIsbn); if(!bookToUpdate) return; const updatedData = { title: document.getElementById('edit-title').value, isbn: document.getElementById('edit-isbn').value.trim(), totalCopies: parseInt(document.getElementById('edit-quantity').value, 10), subject: document.getElementById('edit-subject').value, level: document.getElementById('edit-level').value, language: document.getElementById('edit-language').value, cornerName: document.getElementById('edit-corner-name').value, cornerNumber: document.getElementById('edit-corner-number').value }; if (updatedData.totalCopies < bookToUpdate.loanedCopies) { alert('La quantité totale ne peut pas être inférieure au nombre de livres déjà prêtés.'); return; } await fetch(`${API_URL}/books/${originalIsbn}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) }); closeModal(); await fetchData(); });
     const returnLoan = async (isbn, studentName) => { await fetch(`${API_URL}/loans/return`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isbn, studentName }) }); await fetchData(); if (loansModal.style.display === 'flex') { displayLoans(loanSearchInput.value); } };
     loanForm.addEventListener('submit', async (e) => { e.preventDefault(); const loanData = { isbn: loanIsbnInput.value.trim(), studentName: document.getElementById('student-name').value, loanDate: document.getElementById('loan-date').value, returnDate: document.getElementById('return-date').value }; const response = await fetch(`${API_URL}/loans`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loanData) }); if (response.ok) { loanForm.reset(); loanBookTitle.textContent = '-'; await fetchData(); alert('تمت إعارة الكتاب بنجاح!'); } else { alert('لا يمكن إعارة هذا الكتاب. جميع النسخ معارة بالفعل.'); } });
