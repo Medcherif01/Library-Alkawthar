@@ -17,27 +17,81 @@ app.use(express.json({ limit: '10mb' }));
 // Connexion MongoDB avec mise en cache pour Vercel serverless
 // (évite d'ouvrir une nouvelle connexion à chaque requête)
 // -------------------------------------------------------
-let isConnected = false;
+
+// Vérification IMMÉDIATE de la variable d'environnement au démarrage du module.
+// Si elle est absente, on arrête tout de suite avec un message clair dans les logs.
+const MONGODB_URI = (process.env.MONGODB_URI || '').trim();
+
+if (!MONGODB_URI) {
+  console.error('╔══════════════════════════════════════════════════════════════╗');
+  console.error('║  ❌ ERREUR CRITIQUE : MONGODB_URI non définie                ║');
+  console.error('║  Allez dans Vercel → Project Settings → Environment Variables║');
+  console.error('║  et ajoutez : MONGODB_URI = mongodb+srv://user:pass@...      ║');
+  console.error('╚══════════════════════════════════════════════════════════════╝');
+}
+
+// États de connexion
+let connectionState = 'disconnected'; // 'disconnected' | 'connecting' | 'connected' | 'error'
+let connectionPromise = null;
 
 const connectToDatabase = async () => {
-  if (isConnected) return;
-
-  if (!process.env.MONGODB_URI) {
-    throw new Error('La variable d\'environnement MONGODB_URI est manquante. Veuillez la configurer dans Vercel.');
+  // Déjà connecté → réutiliser
+  if (connectionState === 'connected' && mongoose.connection.readyState === 1) {
+    return;
   }
 
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-    });
-    isConnected = true;
-    console.log('✅ Connexion à MongoDB réussie.');
-  } catch (err) {
-    console.error('❌ Erreur de connexion à MongoDB:', err.message);
+  // Connexion en cours → attendre la même promesse
+  if (connectionState === 'connecting' && connectionPromise) {
+    return connectionPromise;
+  }
+
+  // Vérification de la variable d'environnement (avec message explicite)
+  if (!MONGODB_URI) {
+    throw new Error(
+      'MONGODB_URI est undefined. ' +
+      'Configurez cette variable dans Vercel → Project Settings → Environment Variables. ' +
+      'Exemple : mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/alkawthar?retryWrites=true&w=majority'
+    );
+  }
+
+  if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
+    throw new Error(
+      `MONGODB_URI invalide (valeur actuelle commence par "${MONGODB_URI.substring(0, 20)}..."). ` +
+      'Elle doit commencer par "mongodb://" ou "mongodb+srv://".'
+    );
+  }
+
+  connectionState = 'connecting';
+
+  connectionPromise = mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 10000,
+  }).then(() => {
+    connectionState = 'connected';
+    connectionPromise = null;
+    console.log('✅ Connexion initiale à MongoDB réussie.');
+  }).catch((err) => {
+    connectionState = 'error';
+    connectionPromise = null;
+    console.error('❌ ÉCHEC de la connexion initiale à MongoDB:', err.message);
     throw err;
-  }
+  });
+
+  return connectionPromise;
 };
+
+// Écouter les événements mongoose pour resetter l'état si la connexion est perdue
+mongoose.connection.on('disconnected', () => {
+  if (connectionState === 'connected') {
+    console.warn('⚠️  MongoDB déconnecté. La prochaine requête tentera une reconnexion.');
+    connectionState = 'disconnected';
+  }
+});
+mongoose.connection.on('error', (err) => {
+  console.error('❌ Erreur mongoose:', err.message);
+  connectionState = 'error';
+});
 
 // Middleware de connexion automatique avant chaque requête
 app.use(async (req, res, next) => {
@@ -45,9 +99,13 @@ app.use(async (req, res, next) => {
     await connectToDatabase();
     next();
   } catch (err) {
+    console.error(`❌ [${req.method} ${req.path}] Connexion DB impossible:`, err.message);
     res.status(503).json({
       error: 'Impossible de se connecter à la base de données.',
-      details: err.message
+      details: err.message,
+      hint: !MONGODB_URI
+        ? 'La variable MONGODB_URI est absente. Configurez-la dans Vercel → Project Settings → Environment Variables.'
+        : 'Vérifiez que MONGODB_URI est valide et que l\'IP de Vercel est autorisée dans MongoDB Atlas (Network Access → 0.0.0.0/0).'
     });
   }
 });

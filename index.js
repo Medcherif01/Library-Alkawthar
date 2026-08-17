@@ -42,15 +42,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch(`${API_URL}/books`),
                 fetch(`${API_URL}/loans`)
             ]);
+
+            // En cas d'erreur serveur, essayer d'extraire le message JSON
             if (!booksRes.ok || !loansRes.ok) {
-                throw new Error(`Réponse du serveur non valide (books: ${booksRes.status}, loans: ${loansRes.status})`);
+                const failedRes = !booksRes.ok ? booksRes : loansRes;
+                const failedName = !booksRes.ok ? 'livres' : 'prêts';
+                let errDetail = `HTTP ${failedRes.status}`;
+                let errHint = '';
+                try {
+                    const errJson = await failedRes.json();
+                    if (errJson.details) errDetail = errJson.details;
+                    if (errJson.hint)    errHint = '\n\n💡 ' + errJson.hint;
+                } catch (_) {}
+                throw new Error(`Erreur lors du chargement des ${failedName} : ${errDetail}${errHint}`);
             }
+
             allBooks = await booksRes.json();
             allLoans = await loansRes.json();
             initializeDashboard();
         } catch (error) {
             console.error("❌ Erreur de chargement des données:", error);
-            alert("ERREUR : Impossible de charger les données. Le serveur backend ne répond pas.\n\nDétails : " + error.message);
+            alert(
+                "❌ Impossible de charger les données de la bibliothèque.\n\n" +
+                error.message + "\n\n" +
+                "Si le problème persiste, vérifiez la variable MONGODB_URI dans les paramètres Vercel."
+            );
         }
     };
 
